@@ -90,3 +90,33 @@ From now on, every time you `git push` to GitHub, Render automatically redeploys
 
 - Render's free web services "sleep" after periods of inactivity and take ~30-60 seconds to wake up on the next visit. This is fine for an MVP; you can upgrade to a paid instance later to avoid it.
 - MongoDB Atlas's free tier (M0) has a 512MB storage limit, which is plenty for an MVP with hundreds of listings and users.
+
+## Part 6 - Monetization (Free vs Pro plan)
+
+Hartahub has a built-in Free/Pro plan system:
+
+- **Free** agents can post up to 2 listings and 2 buyer requirements, and can see that a match exists but the counterpart agent's email/phone are hidden.
+- **Pro** agents (RM 39/month by default) get unlimited listings and requirements, plus full contact details on every match.
+
+There's no payment gateway wired up yet - upgrades are granted manually, which is the simplest way to start and lets you validate that agents will actually pay before building any billing automation. When you're ready to automate, Malaysia-friendly options with recurring billing support include Curlec (Razorpay Malaysia, most SaaS-focused), Billplz, and Chip.
+
+### Before you launch this
+
+Open `public/upgrade.html` and replace the two placeholders with your real details:
+
+- `[ADD YOUR PHONE NUMBER OR BANK ACCOUNT HERE]` - your DuitNow number or bank account for receiving payment
+- `[ADD YOUR WHATSAPP NUMBER HERE]` (and the `https://wa.me/60000000000` link next to it) - where agents send proof of payment
+
+To change the price, edit the `PRO_PRICE_RM` value in `utils/constants.js` (this also updates the number shown on the pricing page). To change the free-tier limits, edit `FREE_LISTING_LIMIT` and `FREE_REQUIREMENT_LIMIT` in the same file.
+
+### Manually upgrading an agent to Pro
+
+Once an agent pays and messages you:
+
+1. Go to [cloud.mongodb.com](https://cloud.mongodb.com) and open your Hartahub cluster.
+2. Click **Browse Collections**, then open the `users` collection.
+3. Find the agent by their email address.
+4. Click the pencil/edit icon on that document, change `"plan": "free"` to `"plan": "pro"`, and save.
+5. (Optional) Add a `"proExpiresAt"` field with a future date (e.g. one month from now, in ISO format like `"2026-09-01T00:00:00.000Z"`) if you want their Pro access to automatically lapse. Leave it out for an indefinite Pro upgrade.
+
+No code changes or redeploys needed - the change takes effect the next time that agent loads the app.

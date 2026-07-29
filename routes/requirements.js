@@ -1,6 +1,9 @@
 const express = require("express");
 const Requirement = require("../models/Requirement");
+const User = require("../models/User");
 const requireAuth = require("../middleware/requireAuth");
+const { isPro } = require("../utils/plan");
+const { FREE_REQUIREMENT_LIMIT } = require("../utils/constants");
 
 const router = express.Router();
 
@@ -30,6 +33,16 @@ router.post("/", requireAuth, async (req, res) => {
     }
     if (Number(budgetMin) > Number(budgetMax)) {
       return res.status(400).json({ error: "Minimum budget cannot be more than maximum budget." });
+    }
+
+    const user = await User.findById(req.session.userId);
+    if (!isPro(user)) {
+      const activeCount = await Requirement.countDocuments({ agent: req.session.userId });
+      if (activeCount >= FREE_REQUIREMENT_LIMIT) {
+        return res.status(403).json({
+          error: `Free plan is limited to ${FREE_REQUIREMENT_LIMIT} buyer requirements. Upgrade to Pro for unlimited requirements.`,
+        });
+      }
     }
 
     const requirement = await Requirement.create({

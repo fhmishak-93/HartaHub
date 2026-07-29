@@ -1,6 +1,9 @@
 const express = require("express");
 const Listing = require("../models/Listing");
+const User = require("../models/User");
 const requireAuth = require("../middleware/requireAuth");
+const { isPro } = require("../utils/plan");
+const { FREE_LISTING_LIMIT } = require("../utils/constants");
 
 const router = express.Router();
 
@@ -52,6 +55,16 @@ router.post("/", requireAuth, async (req, res) => {
       return res
         .status(400)
         .json({ error: "Title, property type, state, and price are required." });
+    }
+
+    const user = await User.findById(req.session.userId);
+    if (!isPro(user)) {
+      const activeCount = await Listing.countDocuments({ agent: req.session.userId });
+      if (activeCount >= FREE_LISTING_LIMIT) {
+        return res.status(403).json({
+          error: `Free plan is limited to ${FREE_LISTING_LIMIT} listings. Upgrade to Pro for unlimited listings.`,
+        });
+      }
     }
 
     const listing = await Listing.create({

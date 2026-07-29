@@ -78,12 +78,17 @@ function renderNav(user) {
   if (!nav) return;
 
   if (user) {
+    const planBadge =
+      user.plan === "pro"
+        ? `<span class="plan-badge plan-badge-pro">Pro</span>`
+        : `<span class="plan-badge plan-badge-free">Free</span>`;
     nav.innerHTML = `
       <a href="dashboard.html">Dashboard</a>
       <a href="browse.html">Browse Listings</a>
       <a href="post-listing.html">Post Listing</a>
       <a href="post-requirement.html">Post Buyer</a>
-      <span class="nav-user">Hi, ${escapeHtml(user.name)}</span>
+      <a href="upgrade.html">Upgrade</a>
+      <span class="nav-user">Hi, ${escapeHtml(user.name)}${planBadge}</span>
       <button id="logout-btn">Log Out</button>
     `;
     document.getElementById("logout-btn").addEventListener("click", async () => {
@@ -91,7 +96,12 @@ function renderNav(user) {
       window.location.href = "index.html";
     });
   } else {
-    nav.innerHTML = "";
+    // Logged-out visitor on the landing page - show Log In + a prominent
+    // Sign Up button that jumps down to the account form.
+    nav.innerHTML = `
+      <a href="#get-started" class="js-goto-login">Log In</a>
+      <a href="#get-started" class="btn btn-primary js-goto-signup">Sign Up Free</a>
+    `;
   }
 }
 
@@ -102,18 +112,28 @@ function initHomePage() {
   const loginForm = document.getElementById("login-form");
   const signupForm = document.getElementById("signup-form");
 
+  function activateTab(tabName) {
+    tabs.forEach((t) => t.classList.toggle("active", t.dataset.tab === tabName));
+    if (tabName === "login") {
+      loginForm.classList.remove("hidden");
+      signupForm.classList.add("hidden");
+    } else {
+      signupForm.classList.remove("hidden");
+      loginForm.classList.add("hidden");
+    }
+  }
+
   tabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      tabs.forEach((t) => t.classList.remove("active"));
-      tab.classList.add("active");
-      if (tab.dataset.tab === "login") {
-        loginForm.classList.remove("hidden");
-        signupForm.classList.add("hidden");
-      } else {
-        signupForm.classList.remove("hidden");
-        loginForm.classList.add("hidden");
-      }
-    });
+    tab.addEventListener("click", () => activateTab(tab.dataset.tab));
+  });
+
+  // CTA buttons scattered around the landing page (nav, hero, final banner)
+  // link to #get-started and should also switch the form to the right tab.
+  document.querySelectorAll(".js-goto-signup").forEach((el) => {
+    el.addEventListener("click", () => activateTab("signup"));
+  });
+  document.querySelectorAll(".js-goto-login").forEach((el) => {
+    el.addEventListener("click", () => activateTab("login"));
   });
 
   loginForm.addEventListener("submit", async (e) => {
@@ -219,7 +239,9 @@ function requirementCardHtml(requirement, options = {}) {
 
 async function initDashboardPage(user) {
   document.getElementById("welcome-message").textContent =
-    `Welcome back, ${user.name}. Here's what's happening on Hartahub.`;
+    user.plan === "pro"
+      ? `Welcome back, ${user.name}. You're on the Pro plan - unlimited listings, unlimited requirements, full contact details.`
+      : `Welcome back, ${user.name}. You're on the Free plan. Upgrade to Pro for unlimited listings and full match contact details.`;
 
   const [myListings, myRequirements, matches] = await Promise.all([
     api("/api/listings/mine"),
@@ -251,7 +273,11 @@ async function initDashboardPage(user) {
                 Budget: ${formatPrice(m.requirement.budgetMin)} - ${formatPrice(m.requirement.budgetMax)}
               </div>
               <div class="data-card-meta">
-                Co-broke with: ${escapeHtml(counterpart.name)} - ${escapeHtml(counterpart.email)}${counterpart.phone ? " - " + escapeHtml(counterpart.phone) : ""}
+                ${
+                  counterpart.locked
+                    ? `<span class="locked-contact">Co-broke with: ${escapeHtml(counterpart.name)} - <a href="upgrade.html">Upgrade to Pro to view contact details</a></span>`
+                    : `Co-broke with: ${escapeHtml(counterpart.name)} - ${escapeHtml(counterpart.email)}${counterpart.phone ? " - " + escapeHtml(counterpart.phone) : ""}`
+                }
               </div>
             </div>
           </div>
@@ -399,6 +425,16 @@ function initPostRequirementPage() {
   });
 }
 
+// ---------- page: upgrade ----------
+
+function initUpgradePage(user) {
+  const msg = document.getElementById("current-plan-message");
+  msg.textContent =
+    user.plan === "pro"
+      ? "You're already on the Pro plan. Thanks for supporting Hartahub!"
+      : "You're currently on the Free plan.";
+}
+
 // ---------- boot ----------
 
 async function boot() {
@@ -429,6 +465,7 @@ async function boot() {
   if (page === "browse") initBrowsePage();
   if (page === "post-listing") initPostListingPage();
   if (page === "post-requirement") initPostRequirementPage();
+  if (page === "upgrade") initUpgradePage(user);
 }
 
 document.addEventListener("DOMContentLoaded", boot);

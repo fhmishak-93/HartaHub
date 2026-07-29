@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Hartahub - Co-Broking for Malaysian Agents</title>
+<title>Hartahub - Co-Broking Platform for Malaysian Property Agents</title>
+<meta name="description" content="Hartahub matches your buyer requirements against listings from agents across Malaysia automatically - by property type, state, and budget. Free to start." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body data-page="home">
@@ -15,64 +19,248 @@
   </header>
 
   <main>
-    <section class="hero container">
-      <div class="hero-text">
-        <h1>Co-broke smarter, not harder.</h1>
-        <p>
-          Hartahub helps Malaysian property agents list, browse, and get
-          auto-matched on co-broking deals - based on your buyer's budget
-          and preferred location.
-        </p>
-      </div>
-
-      <div class="auth-card">
-        <div class="auth-tabs">
-          <button class="auth-tab active" data-tab="login">Log In</button>
-          <button class="auth-tab" data-tab="signup">Sign Up</button>
+    <!-- Hero -->
+    <section class="hero-v2">
+      <div class="container hero-v2-inner">
+        <div class="hero-v2-text">
+          <span class="eyebrow">Built for Malaysian Co-Broking Agents</span>
+          <h1>Stop missing co-broking deals buried in WhatsApp groups.</h1>
+          <p>
+            Hartahub automatically matches your buyer requirements against listings
+            from agents across Malaysia - by property type, state, and budget.
+            List once, get matched, close faster.
+          </p>
+          <div class="cta-row">
+            <a href="#get-started" class="btn btn-primary btn-lg js-goto-signup">Get Started Free</a>
+            <a href="#how-it-works" class="btn btn-secondary btn-lg">See How It Works</a>
+          </div>
+          <p class="trust-line">Free to start. No credit card required.</p>
         </div>
 
-        <form id="login-form" class="auth-form">
-          <label for="login-email">Email</label>
-          <input type="email" id="login-email" required autocomplete="email" />
-
-          <label for="login-password">Password</label>
-          <input type="password" id="login-password" required autocomplete="current-password" />
-
-          <button type="submit" class="btn btn-primary">Log In</button>
-          <p class="form-message" id="login-message"></p>
-        </form>
-
-        <form id="signup-form" class="auth-form hidden">
-          <label for="signup-name">Full Name</label>
-          <input type="text" id="signup-name" required />
-
-          <label for="signup-email">Email</label>
-          <input type="email" id="signup-email" required autocomplete="email" />
-
-          <label for="signup-phone">Phone (optional)</label>
-          <input type="tel" id="signup-phone" placeholder="01X-XXXXXXX" />
-
-          <label for="signup-password">Password</label>
-          <input type="password" id="signup-password" required minlength="6" autocomplete="new-password" />
-
-          <button type="submit" class="btn btn-primary">Create Account</button>
-          <p class="form-message" id="signup-message"></p>
-        </form>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="mock-card mock-card-listing">
+            <span class="badge">Condo - Selangor</span>
+            <strong>RM 550,000</strong>
+            <span class="mock-meta">3 bed - Petaling Jaya</span>
+          </div>
+          <div class="mock-connector">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Matched
+          </div>
+          <div class="mock-card mock-card-buyer">
+            <span class="badge">Buyer - Selangor</span>
+            <strong>RM 400k - 600k</strong>
+            <span class="mock-meta">Looking for 3BR condo</span>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="features container">
-      <div class="feature-card">
-        <h3>List</h3>
-        <p>Post your property listings so other agents can find them.</p>
+    <!-- Pain points -->
+    <section class="section">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Co-broking shouldn't rely on scrolling through group chats</h2>
+          <p>If any of this sounds familiar, Hartahub was built for you.</p>
+        </div>
+        <div class="pain-grid">
+          <div class="pain-card">
+            <div class="pain-icon">!</div>
+            <h3>Deals slip through the cracks</h3>
+            <p>By the time you scroll back to find that listing your buyer wanted, another agent already closed it.</p>
+          </div>
+          <div class="pain-card">
+            <div class="pain-icon">?</div>
+            <h3>No way to match automatically</h3>
+            <p>You're manually comparing every buyer's budget against every listing you can find - one by one.</p>
+          </div>
+          <div class="pain-card">
+            <div class="pain-icon">~</div>
+            <h3>Hard to track who wants what</h3>
+            <p>Buyer requirements live in scattered notes, texts, and memory instead of one organized place.</p>
+          </div>
+        </div>
       </div>
-      <div class="feature-card">
-        <h3>Browse</h3>
-        <p>Search listings shared by agents across Malaysia.</p>
+    </section>
+
+    <!-- How it works -->
+    <section id="how-it-works" class="section section-alt">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Three steps to your next co-broking deal</h2>
+          <p>No training needed - if you can fill a form, you can use Hartahub.</p>
+        </div>
+        <div class="steps-row">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h3>List or post a buyer requirement</h3>
+            <p>Add a property you're selling, or tell Hartahub what your buyer is looking for - property type, state, and budget.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <h3>Browse the network</h3>
+            <p>See listings shared by agents across Malaysia, filterable by state and property type.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <h3>Get matched automatically</h3>
+            <p>Hartahub compares every listing and buyer requirement for you, and surfaces the fits on your dashboard.</p>
+          </div>
+        </div>
       </div>
-      <div class="feature-card">
-        <h3>Match</h3>
-        <p>Get auto-matched with buyer requirements by budget and location.</p>
+    </section>
+
+    <!-- Features -->
+    <section class="section">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Everything you need to co-broke faster</h2>
+        </div>
+        <div class="feature-grid-v2">
+          <div class="feature-tile">
+            <div class="feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="7" cy="12" r="4"></circle>
+                <circle cx="17" cy="12" r="4"></circle>
+                <line x1="11" y1="12" x2="13" y2="12"></line>
+              </svg>
+            </div>
+            <h3>Automatic matching</h3>
+            <p>Every listing and buyer requirement is compared by property type, state, and budget - no manual work.</p>
+          </div>
+          <div class="feature-tile">
+            <div class="feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+                <line x1="8" y1="8" x2="16" y2="8"></line>
+                <line x1="8" y1="13" x2="16" y2="13"></line>
+                <line x1="8" y1="18" x2="12" y2="18"></line>
+              </svg>
+            </div>
+            <h3>Post listings in minutes</h3>
+            <p>A simple form - title, type, price, location, photos link. Live for other agents right away.</p>
+          </div>
+          <div class="feature-tile">
+            <div class="feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                <polyline points="7 11 10 14 16 8"></polyline>
+              </svg>
+            </div>
+            <h3>Buyer requirement tracking</h3>
+            <p>Keep every client's budget and location preferences in one place instead of scattered notes.</p>
+          </div>
+          <div class="feature-tile">
+            <div class="feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="7"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+            <h3>Browse the full network</h3>
+            <p>Filter listings from every agent on Hartahub by state and property type in seconds.</p>
+          </div>
+          <div class="feature-tile">
+            <div class="feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path>
+              </svg>
+            </div>
+            <h3>Secure agent login</h3>
+            <p>Every account is private to you - your listings and buyer details are never public without your post.</p>
+          </div>
+          <div class="feature-tile">
+            <div class="feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"></path>
+                <circle cx="12" cy="10" r="2.5"></circle>
+              </svg>
+            </div>
+            <h3>Built for Malaysia</h3>
+            <p>All 16 states and the property types agents actually deal with here - no generic overseas layout.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing teaser -->
+    <section class="section section-alt">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Start free. Upgrade when you're ready.</h2>
+          <p>No card required to get started.</p>
+        </div>
+        <div class="pricing-teaser-grid">
+          <div class="pricing-mini">
+            <h3>Free</h3>
+            <div class="pricing-mini-amount">RM 0<span>/month</span></div>
+            <ul>
+              <li>Browse all listings</li>
+              <li>2 listings + 2 buyer requirements</li>
+              <li>Matches shown, contact locked</li>
+            </ul>
+          </div>
+          <div class="pricing-mini pricing-mini-highlight">
+            <h3>Pro</h3>
+            <div class="pricing-mini-amount">RM 39<span>/month</span></div>
+            <ul>
+              <li>Unlimited listings + requirements</li>
+              <li>Full contact details on every match</li>
+              <li>Priority support</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Get started (auth form) -->
+    <section id="get-started" class="get-started-section">
+      <div class="container get-started-inner">
+        <div class="auth-card">
+          <div class="auth-tabs">
+            <button class="auth-tab active" data-tab="login">Log In</button>
+            <button class="auth-tab" data-tab="signup">Sign Up</button>
+          </div>
+
+          <form id="login-form" class="auth-form">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" required autocomplete="email" />
+
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" required autocomplete="current-password" />
+
+            <button type="submit" class="btn btn-primary">Log In</button>
+            <p class="form-message" id="login-message"></p>
+          </form>
+
+          <form id="signup-form" class="auth-form hidden">
+            <label for="signup-name">Full Name</label>
+            <input type="text" id="signup-name" required />
+
+            <label for="signup-email">Email</label>
+            <input type="email" id="signup-email" required autocomplete="email" />
+
+            <label for="signup-phone">Phone (optional)</label>
+            <input type="tel" id="signup-phone" placeholder="01X-XXXXXXX" />
+
+            <label for="signup-password">Password</label>
+            <input type="password" id="signup-password" required minlength="6" autocomplete="new-password" />
+
+            <button type="submit" class="btn btn-primary">Create Free Account</button>
+            <p class="form-message" id="signup-message"></p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final-cta">
+      <div class="container">
+        <h2>Ready to close your next co-broking deal?</h2>
+        <p>Join Hartahub and let matching do the searching for you.</p>
+        <a href="#get-started" class="btn btn-primary btn-lg js-goto-signup">Get Started Free</a>
       </div>
     </section>
   </main>

@@ -1,6 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
+const { isPro } = require("../utils/plan");
 
 const router = express.Router();
 
@@ -75,11 +76,16 @@ router.get("/me", async (req, res) => {
   if (!req.session || !req.session.userId) {
     return res.status(401).json({ error: "Not logged in." });
   }
-  const user = await User.findById(req.session.userId).select("name email");
+  const user = await User.findById(req.session.userId).select("name email plan proExpiresAt");
   if (!user) {
     return res.status(401).json({ error: "Not logged in." });
   }
-  res.json({ id: user._id, name: user.name, email: user.email });
+  res.json({
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    plan: isPro(user) ? "pro" : "free",
+  });
 });
 
 module.exports = router;
