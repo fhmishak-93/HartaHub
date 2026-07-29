@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Post a Buyer Requirement - Hartahub</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="post-requirement">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo">Harta<span>hub</span></a>
+      <nav id="nav-links" class="nav-links"></nav>
+    </div>
+  </header>
+
+  <main class="container page page-narrow">
+    <h1>Post a Buyer Requirement</h1>
+    <p class="page-subtitle">
+      Tell Hartahub what your client is looking for, and we'll auto-match it
+      against listings from all agents.
+    </p>
+
+    <form id="requirement-form" class="stacked-form">
+      <label for="clientLabel">Client Label</label>
+      <input type="text" id="clientLabel" required placeholder="e.g. Mr. Tan - first-time buyer" />
+
+      <div class="form-row">
+        <div>
+          <label for="propertyType">Property Type</label>
+          <select id="propertyType" required></select>
+        </div>
+        <div>
+          <label for="state">State</label>
+          <select id="state" required></select>
+        </div>
+      </div>
+
+      <label for="area">Preferred Area (optional)</label>
+      <input type="text" id="area" placeholder="e.g. Petaling Jaya" />
+
+      <div class="form-row">
+        <div>
+          <label for="budgetMin">Budget Min (RM)</label>
+          <input type="number" id="budgetMin" required min="0" placeholder="e.g. 400000" />
+        </div>
+        <div>
+          <label for="budgetMax">Budget Max (RM)</label>
+          <input type="number" id="budgetMax" required min="0" placeholder="e.g. 600000" />
+        </div>
+      </div>
+
+      <label for="bedrooms">Minimum Bedrooms (optional)</label>
+      <input type="number" id="bedrooms" min="0" />
+
+      <label for="notes">Notes (optional)</label>
+      <textarea id="notes" rows="4" placeholder="Anything else that helps match the right property"></textarea>
+
+      <button type="submit" class="btn btn-primary">Post Buyer Requirement</button>
+      <p class="form-message" id="requirement-message"></p>
+    </form>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

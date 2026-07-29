@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Post a Listing - Hartahub</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="post-listing">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo">Harta<span>hub</span></a>
+      <nav id="nav-links" class="nav-links"></nav>
+    </div>
+  </header>
+
+  <main class="container page page-narrow">
+    <h1>Post a Listing</h1>
+    <p class="page-subtitle">Share a property with other co-broking agents.</p>
+
+    <form id="listing-form" class="stacked-form">
+      <label for="title">Listing Title</label>
+      <input type="text" id="title" required placeholder="e.g. Spacious 3BR Condo near LRT" />
+
+      <div class="form-row">
+        <div>
+          <label for="propertyType">Property Type</label>
+          <select id="propertyType" required></select>
+        </div>
+        <div>
+          <label for="state">State</label>
+          <select id="state" required></select>
+        </div>
+      </div>
+
+      <label for="area">Area / Town (optional)</label>
+      <input type="text" id="area" placeholder="e.g. Mont Kiara" />
+
+      <label for="price">Price (RM)</label>
+      <input type="number" id="price" required min="0" placeholder="e.g. 650000" />
+
+      <div class="form-row form-row-3">
+        <div>
+          <label for="bedrooms">Bedrooms</label>
+          <input type="number" id="bedrooms" min="0" />
+        </div>
+        <div>
+          <label for="bathrooms">Bathrooms</label>
+          <input type="number" id="bathrooms" min="0" />
+        </div>
+        <div>
+          <label for="sizeSqft">Size (sq ft)</label>
+          <input type="number" id="sizeSqft" min="0" />
+        </div>
+      </div>
+
+      <label for="photoUrl">Photo Link (optional)</label>
+      <input type="url" id="photoUrl" placeholder="https://..." />
+
+      <label for="description">Description</label>
+      <textarea id="description" rows="4" placeholder="Key selling points, tenure, facilities, etc."></textarea>
+
+      <button type="submit" class="btn btn-primary">Post Listing</button>
+      <p class="form-message" id="listing-message"></p>
+    </form>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

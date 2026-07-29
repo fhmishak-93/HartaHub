@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hartahub - Co-Broking for Malaysian Agents</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="home">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo">Harta<span>hub</span></a>
+      <nav id="nav-links" class="nav-links"></nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero container">
+      <div class="hero-text">
+        <h1>Co-broke smarter, not harder.</h1>
+        <p>
+          Hartahub helps Malaysian property agents list, browse, and get
+          auto-matched on co-broking deals - based on your buyer's budget
+          and preferred location.
+        </p>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login">Log In</button>
+          <button class="auth-tab" data-tab="signup">Sign Up</button>
+        </div>
+
+        <form id="login-form" class="auth-form">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" required autocomplete="email" />
+
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" required autocomplete="current-password" />
+
+          <button type="submit" class="btn btn-primary">Log In</button>
+          <p class="form-message" id="login-message"></p>
+        </form>
+
+        <form id="signup-form" class="auth-form hidden">
+          <label for="signup-name">Full Name</label>
+          <input type="text" id="signup-name" required />
+
+          <label for="signup-email">Email</label>
+          <input type="email" id="signup-email" required autocomplete="email" />
+
+          <label for="signup-phone">Phone (optional)</label>
+          <input type="tel" id="signup-phone" placeholder="01X-XXXXXXX" />
+
+          <label for="signup-password">Password</label>
+          <input type="password" id="signup-password" required minlength="6" autocomplete="new-password" />
+
+          <button type="submit" class="btn btn-primary">Create Account</button>
+          <p class="form-message" id="signup-message"></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="features container">
+      <div class="feature-card">
+        <h3>List</h3>
+        <p>Post your property listings so other agents can find them.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Browse</h3>
+        <p>Search listings shared by agents across Malaysia.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Match</h3>
+        <p>Get auto-matched with buyer requirements by budget and location.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">&copy; 2026 Hartahub. Built for Malaysian co-broking agents.</div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

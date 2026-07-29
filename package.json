@@ -1,0 +1,20 @@
+{
+  "name": "hartahub",
+  "version": "1.0.0",
+  "description": "Hartahub - a web app for Malaysian co-broking agents to list, browse, and get matched on property deals.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-mongo": "^5.1.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "mongoose": "^8.4.0"
+  }
+}

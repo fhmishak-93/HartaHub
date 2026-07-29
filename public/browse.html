@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Browse Listings - Hartahub</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="browse">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo">Harta<span>hub</span></a>
+      <nav id="nav-links" class="nav-links"></nav>
+    </div>
+  </header>
+
+  <main class="container page">
+    <h1>Browse Listings</h1>
+    <p class="page-subtitle">All properties shared by agents on Hartahub.</p>
+
+    <div class="filter-bar">
+      <select id="filter-state">
+        <option value="">All States</option>
+      </select>
+      <select id="filter-type">
+        <option value="">All Property Types</option>
+      </select>
+      <button id="filter-clear" class="btn btn-secondary">Clear Filters</button>
+    </div>
+
+    <div id="listings-list" class="card-list">
+      <p class="empty-state">Loading listings...</p>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
