@@ -34,11 +34,17 @@ function maskContact(match, myUserId) {
 // one with the buyer requirement (someone else's listing fits your buyer).
 router.get("/", requireAuth, async (req, res) => {
   try {
-    const [listings, requirements, me] = await Promise.all([
+    const [listingsRaw, requirementsRaw, me] = await Promise.all([
       Listing.find().populate("agent", "name email phone renVerified"),
       Requirement.find().populate("agent", "name email phone renVerified"),
       User.findById(req.session.userId),
     ]);
+
+    // Guard against orphaned listings/requirements whose agent account was
+    // removed directly in the database (e.g. a deleted test user). populate()
+    // returns null for those, and they should never surface in matches.
+    const listings = listingsRaw.filter((l) => l.agent);
+    const requirements = requirementsRaw.filter((r) => r.agent);
 
     const allMatches = computeMatches(listings, requirements);
 
