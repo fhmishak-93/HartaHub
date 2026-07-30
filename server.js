@@ -11,6 +11,7 @@ const authRoutes = require("./routes/auth");
 const listingRoutes = require("./routes/listings");
 const requirementRoutes = require("./routes/requirements");
 const matchRoutes = require("./routes/matches");
+const uploadRoutes = require("./routes/uploads");
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/requirements", requirementRoutes);
 app.use("/api/matches", matchRoutes);
+app.use("/api/uploads", uploadRoutes);
 
 // Basic health check, useful for confirming the server deployed correctly.
 app.get("/api/health", (req, res) => {

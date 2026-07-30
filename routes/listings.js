@@ -2,8 +2,7 @@ const express = require("express");
 const Listing = require("../models/Listing");
 const User = require("../models/User");
 const requireAuth = require("../middleware/requireAuth");
-const { isPro } = require("../utils/plan");
-const { FREE_LISTING_LIMIT } = require("../utils/constants");
+const { getTier, getListingLimit } = require("../utils/plan");
 
 const router = express.Router();
 
@@ -13,9 +12,15 @@ router.get("/", async (req, res) => {
     const filter = {};
     if (req.query.state) filter.state = req.query.state;
     if (req.query.propertyType) filter.propertyType = req.query.propertyType;
+    if (req.query.area) filter.area = { $regex: req.query.area, $options: "i" };
+    if (req.query.priceMin || req.query.priceMax) {
+      filter.price = {};
+      if (req.query.priceMin) filter.price.$gte = Number(req.query.priceMin);
+      if (req.query.priceMax) filter.price.$lte = Number(req.query.priceMax);
+    }
 
     const listings = await Listing.find(filter)
-      .populate("agent", "name email phone")
+      .populate("agent", "name email phone renVerified")
       .sort({ createdAt: -1 });
     res.json(listings);
   } catch (err) {
@@ -32,6 +37,21 @@ router.get("/mine", requireAuth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not load your listings." });
+  }
+});
+
+// GET /api/listings/:id - a single listing (used to prefill the edit form)
+router.get("/:id", async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id).populate(
+      "agent",
+      "name email phone renVerified"
+    );
+    if (!listing) return res.status(404).json({ error: "Listing not found." });
+    res.json(listing);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not load listing." });
   }
 });
 
@@ -58,11 +78,13 @@ router.post("/", requireAuth, async (req, res) => {
     }
 
     const user = await User.findById(req.session.userId);
-    if (!isPro(user)) {
+    const tier = getTier(user);
+    const limit = getListingLimit(tier);
+    if (Number.isFinite(limit)) {
       const activeCount = await Listing.countDocuments({ agent: req.session.userId });
-      if (activeCount >= FREE_LISTING_LIMIT) {
+      if (activeCount >= limit) {
         return res.status(403).json({
-          error: `Free plan is limited to ${FREE_LISTING_LIMIT} listings. Upgrade to Pro for unlimited listings.`,
+          error: `Your plan is limited to ${limit} listings. Upgrade for more room.`,
         });
       }
     }
@@ -74,6 +96,7 @@ router.post("/", requireAuth, async (req, res) => {
       state,
       area,
       price,
+      originalPrice: price,
       bedrooms: bedrooms || undefined,
       bathrooms: bathrooms || undefined,
       sizeSqft: sizeSqft || undefined,
@@ -85,6 +108,44 @@ router.post("/", requireAuth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not create listing." });
+  }
+});
+
+// PATCH /api/listings/:id - edit one of your own listings (including
+// marking it active/closed). originalPrice is never touched here, so
+// price-drop tracking stays accurate no matter how many times price changes.
+router.patch("/:id", requireAuth, async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ error: "Listing not found." });
+    if (String(listing.agent) !== String(req.session.userId)) {
+      return res.status(403).json({ error: "You can only edit your own listings." });
+    }
+
+    const editable = [
+      "title",
+      "propertyType",
+      "state",
+      "area",
+      "price",
+      "bedrooms",
+      "bathrooms",
+      "sizeSqft",
+      "description",
+      "photoUrl",
+      "status",
+    ];
+    for (const field of editable) {
+      if (req.body[field] !== undefined && req.body[field] !== "") {
+        listing[field] = req.body[field];
+      }
+    }
+
+    await listing.save();
+    res.json(listing);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not update listing." });
   }
 });
 

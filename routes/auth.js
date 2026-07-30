@@ -1,14 +1,14 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
-const { isPro } = require("../utils/plan");
+const { getTier, getListingLimit, getRequirementLimit } = require("../utils/plan");
 
 const router = express.Router();
 
 // POST /api/auth/signup - create a new agent account
 router.post("/signup", async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, renNumber } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: "Name, email, and password are required." });
@@ -28,6 +28,7 @@ router.post("/signup", async (req, res) => {
       email: email.toLowerCase().trim(),
       passwordHash,
       phone: phone ? phone.trim() : undefined,
+      renNumber: renNumber ? renNumber.trim() : undefined,
     });
 
     req.session.userId = user._id;
@@ -76,15 +77,25 @@ router.get("/me", async (req, res) => {
   if (!req.session || !req.session.userId) {
     return res.status(401).json({ error: "Not logged in." });
   }
-  const user = await User.findById(req.session.userId).select("name email plan proExpiresAt");
+  const user = await User.findById(req.session.userId).select(
+    "name email plan planExpiresAt renVerified renNumber"
+  );
   if (!user) {
     return res.status(401).json({ error: "Not logged in." });
   }
+  const tier = getTier(user);
+  const listingLimit = getListingLimit(tier);
+  const requirementLimit = getRequirementLimit(tier);
   res.json({
     id: user._id,
     name: user.name,
     email: user.email,
-    plan: isPro(user) ? "pro" : "free",
+    plan: tier,
+    renVerified: user.renVerified,
+    renNumber: user.renNumber,
+    // Infinity isn't valid JSON - null means "unlimited" on the frontend.
+    listingLimit: Number.isFinite(listingLimit) ? listingLimit : null,
+    requirementLimit: Number.isFinite(requirementLimit) ? requirementLimit : null,
   });
 });
 

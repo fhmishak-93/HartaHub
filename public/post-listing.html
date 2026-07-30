@@ -18,8 +18,8 @@
   </header>
 
   <main class="container page page-narrow">
-    <h1>Post a Listing</h1>
-    <p class="page-subtitle">Share a property with other co-broking agents.</p>
+    <h1 id="listing-form-title">Post a Listing</h1>
+    <p class="page-subtitle" id="listing-form-subtitle">Share a property with other co-broking agents.</p>
 
     <form id="listing-form" class="stacked-form">
       <label for="title">Listing Title</label>
@@ -57,13 +57,28 @@
         </div>
       </div>
 
-      <label for="photoUrl">Photo Link (optional)</label>
+      <label for="photoUrl">Photo Link</label>
       <input type="url" id="photoUrl" placeholder="https://..." />
+
+      <div id="photo-upload-wrap" class="hidden">
+        <label for="photoFile">Or upload 1 front photo of the unit (Pro &amp; Premium)</label>
+        <input type="file" id="photoFile" accept="image/*" />
+        <p class="hint" id="photo-upload-status"></p>
+      </div>
+      <p class="hint" id="photo-upload-locked-hint"></p>
 
       <label for="description">Description</label>
       <textarea id="description" rows="4" placeholder="Key selling points, tenure, facilities, etc."></textarea>
 
-      <button type="submit" class="btn btn-primary">Post Listing</button>
+      <div id="status-field-wrap" class="hidden">
+        <label for="status">Listing Status</label>
+        <select id="status">
+          <option value="active">Active</option>
+          <option value="closed">Closed (deal done)</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="listing-submit-btn">Post Listing</button>
       <p class="form-message" id="listing-message"></p>
     </form>
   </main>

@@ -4,7 +4,7 @@ const Requirement = require("../models/Requirement");
 const User = require("../models/User");
 const requireAuth = require("../middleware/requireAuth");
 const { computeMatches } = require("../utils/matching");
-const { isPro } = require("../utils/plan");
+const { getTier, canSeeContactDetails } = require("../utils/plan");
 
 const router = express.Router();
 
@@ -35,8 +35,8 @@ function maskContact(match, myUserId) {
 router.get("/", requireAuth, async (req, res) => {
   try {
     const [listings, requirements, me] = await Promise.all([
-      Listing.find().populate("agent", "name email phone"),
-      Requirement.find().populate("agent", "name email phone"),
+      Listing.find().populate("agent", "name email phone renVerified"),
+      Requirement.find().populate("agent", "name email phone renVerified"),
       User.findById(req.session.userId),
     ]);
 
@@ -59,7 +59,7 @@ router.get("/", requireAuth, async (req, res) => {
       requirement: m.requirement.toObject(),
     }));
 
-    if (!isPro(me)) {
+    if (!canSeeContactDetails(getTier(me))) {
       myMatches = myMatches.map((m) => maskContact(m, myUserId));
     }
 

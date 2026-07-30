@@ -3,7 +3,7 @@
 // nav bar, and runs whichever function matches the current page
 // (read from <body data-page="...">).
 
-// Keep these two lists identical to utils/constants.js on the server -
+// Keep these lists/constants identical to utils/constants.js on the server -
 // they're duplicated here because the browser can't "require" server files.
 const PROPERTY_TYPES = [
   "Condominium/Apartment",
@@ -33,6 +33,8 @@ const MALAYSIAN_STATES = [
   "Selangor",
   "Terengganu",
 ];
+
+const COMMISSION_RATE = 0.03;
 
 // Pages that don't require a logged-in user.
 const PUBLIC_PAGES = ["home"];
@@ -71,6 +73,31 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// Pro and Premium agents see full contact details and the commission
+// dashboard; Free agents don't. Mirrors utils/plan.js on the server.
+function canSeeCommissionDashboardClient(tier) {
+  return tier === "pro" || tier === "premium";
+}
+
+function canUploadPhotoClient(tier) {
+  return tier === "pro" || tier === "premium";
+}
+
+function daysOnPlatform(createdAt) {
+  if (!createdAt) return 0;
+  const created = new Date(createdAt);
+  const now = new Date();
+  const diffMs = now - created;
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return days < 0 ? 0 : days;
+}
+
+// Small gold tick shown next to a REN-verified agent's name.
+function verifiedTickHtml(agent) {
+  if (!agent || !agent.renVerified) return "";
+  return `<span class="verified-tick" title="Verified REN agent">&#10003;</span>`;
+}
+
 // ---------- nav bar ----------
 
 function renderNav(user) {
@@ -78,17 +105,20 @@ function renderNav(user) {
   if (!nav) return;
 
   if (user) {
-    const planBadge =
-      user.plan === "pro"
-        ? `<span class="plan-badge plan-badge-pro">Pro</span>`
-        : `<span class="plan-badge plan-badge-free">Free</span>`;
+    let planBadge = `<span class="plan-badge plan-badge-free">Free</span>`;
+    if (user.plan === "pro") {
+      planBadge = `<span class="plan-badge plan-badge-pro">Pro</span>`;
+    } else if (user.plan === "premium") {
+      planBadge = `<span class="plan-badge plan-badge-premium">Premium</span>`;
+    }
+    const tick = user.renVerified ? verifiedTickHtml({ renVerified: true }) : "";
     nav.innerHTML = `
       <a href="dashboard.html">Dashboard</a>
       <a href="browse.html">Browse Listings</a>
       <a href="post-listing.html">Post Listing</a>
       <a href="post-requirement.html">Post Buyer</a>
       <a href="upgrade.html">Upgrade</a>
-      <span class="nav-user">Hi, ${escapeHtml(user.name)}${planBadge}</span>
+      <span class="nav-user">Hi, ${escapeHtml(user.name)}${tick}${planBadge}</span>
       <button id="logout-btn">Log Out</button>
     `;
     document.getElementById("logout-btn").addEventListener("click", async () => {
@@ -168,6 +198,7 @@ function initHomePage() {
           name: document.getElementById("signup-name").value,
           email: document.getElementById("signup-email").value,
           phone: document.getElementById("signup-phone").value,
+          renNumber: document.getElementById("signup-ren").value,
           password: document.getElementById("signup-password").value,
         }),
       });
@@ -179,35 +210,63 @@ function initHomePage() {
   });
 }
 
-// ---------- page: dashboard ----------
+// ---------- shared card rendering ----------
 
+// Clean layout: 1 photo, title, location, price - plus small info tags for
+// days on Hartahub, price reduction, estimated commission, and status.
 function listingCardHtml(listing, options = {}) {
   const photo = listing.photoUrl
-    ? `<img src="${escapeHtml(listing.photoUrl)}" alt="${escapeHtml(listing.title)}" onerror="this.style.display='none'" />`
-    : "";
+    ? `<img class="data-card-photo" src="${escapeHtml(listing.photoUrl)}" alt="${escapeHtml(listing.title)}" onerror="this.style.display='none'" />`
+    : `<div class="data-card-photo-placeholder">No photo yet</div>`;
+
   const agentInfo = listing.agent
-    ? `<div class="data-card-meta">Agent: ${escapeHtml(listing.agent.name)} - ${escapeHtml(listing.agent.email)}${listing.agent.phone ? " - " + escapeHtml(listing.agent.phone) : ""}</div>`
+    ? `<div class="data-card-meta">Agent: ${escapeHtml(listing.agent.name)}${verifiedTickHtml(listing.agent)}${
+        listing.agent.locked
+          ? ""
+          : " - " + escapeHtml(listing.agent.email) + (listing.agent.phone ? " - " + escapeHtml(listing.agent.phone) : "")
+      }</div>`
+    : "";
+
+  const tags = [`<span class="info-tag info-tag-days">${daysOnPlatform(listing.createdAt)} days on Hartahub</span>`];
+  if (listing.status === "closed") {
+    tags.push(`<span class="info-tag info-tag-closed">Closed</span>`);
+  }
+  if (listing.originalPrice != null && Number(listing.originalPrice) > Number(listing.price)) {
+    const reduction = Number(listing.originalPrice) - Number(listing.price);
+    tags.push(`<span class="info-tag info-tag-price-drop">Reduced by ${formatPrice(reduction)}</span>`);
+  }
+  if (options.showCommission) {
+    const commission = Number(listing.price) * COMMISSION_RATE;
+    tags.push(`<span class="info-tag info-tag-commission">Est. commission ${formatPrice(Math.round(commission))}</span>`);
+  }
+
+  const editBtn = options.showEdit
+    ? `<a class="btn btn-sm btn-edit" href="post-listing.html?id=${listing._id}">Edit</a>`
+    : "";
+  const statusToggleBtn = options.showStatusToggle
+    ? `<button class="btn btn-sm btn-secondary" data-toggle-status="${listing._id}" data-current-status="${listing.status}">${
+        listing.status === "closed" ? "Mark Active" : "Mark Closed"
+      }</button>`
     : "";
   const deleteBtn = options.showDelete
-    ? `<button class="btn btn-danger" data-delete-listing="${listing._id}">Delete</button>`
+    ? `<button class="btn btn-sm btn-danger" data-delete-listing="${listing._id}">Delete</button>`
     : "";
 
   return `
-    <div class="data-card">
+    <div class="data-card data-card-clean">
       ${photo}
       <div class="data-card-body">
-        <h3>${escapeHtml(listing.title)}</h3>
-        <span class="badge">${escapeHtml(listing.propertyType)}</span>
-        <span class="badge">${escapeHtml(listing.state)}${listing.area ? " - " + escapeHtml(listing.area) : ""}</span>
-        <div class="price-tag">${formatPrice(listing.price)}</div>
-        <div class="data-card-meta">
-          ${listing.bedrooms ? listing.bedrooms + " bed" : ""}
-          ${listing.bathrooms ? " - " + listing.bathrooms + " bath" : ""}
-          ${listing.sizeSqft ? " - " + listing.sizeSqft + " sqft" : ""}
+        <div class="data-card-title-row">
+          <h3>${escapeHtml(listing.title)}</h3>
         </div>
+        <div class="data-card-location">${escapeHtml(listing.propertyType)} - ${escapeHtml(listing.state)}${
+    listing.area ? ", " + escapeHtml(listing.area) : ""
+  }</div>
+        <div class="price-tag">${formatPrice(listing.price)}</div>
+        <div class="tag-row">${tags.join("")}</div>
         ${listing.description ? `<div class="data-card-meta">${escapeHtml(listing.description)}</div>` : ""}
         ${agentInfo}
-        ${deleteBtn}
+        ${editBtn || statusToggleBtn || deleteBtn ? `<div class="card-actions">${editBtn}${statusToggleBtn}${deleteBtn}</div>` : ""}
       </div>
     </div>
   `;
@@ -215,10 +274,20 @@ function listingCardHtml(listing, options = {}) {
 
 function requirementCardHtml(requirement, options = {}) {
   const agentInfo = requirement.agent
-    ? `<div class="data-card-meta">Agent: ${escapeHtml(requirement.agent.name)} - ${escapeHtml(requirement.agent.email)}${requirement.agent.phone ? " - " + escapeHtml(requirement.agent.phone) : ""}</div>`
+    ? `<div class="data-card-meta">Agent: ${escapeHtml(requirement.agent.name)}${verifiedTickHtml(requirement.agent)}${
+        requirement.agent.locked
+          ? ""
+          : " - " +
+            escapeHtml(requirement.agent.email) +
+            (requirement.agent.phone ? " - " + escapeHtml(requirement.agent.phone) : "")
+      }</div>`
+    : "";
+
+  const editBtn = options.showEdit
+    ? `<a class="btn btn-sm btn-edit" href="post-requirement.html?id=${requirement._id}">Edit</a>`
     : "";
   const deleteBtn = options.showDelete
-    ? `<button class="btn btn-danger" data-delete-requirement="${requirement._id}">Delete</button>`
+    ? `<button class="btn btn-sm btn-danger" data-delete-requirement="${requirement._id}">Delete</button>`
     : "";
 
   return `
@@ -231,17 +300,22 @@ function requirementCardHtml(requirement, options = {}) {
         <div class="data-card-meta">${requirement.bedrooms ? "Min " + requirement.bedrooms + " bed" : ""}</div>
         ${requirement.notes ? `<div class="data-card-meta">${escapeHtml(requirement.notes)}</div>` : ""}
         ${agentInfo}
-        ${deleteBtn}
+        ${editBtn || deleteBtn ? `<div class="card-actions">${editBtn}${deleteBtn}</div>` : ""}
       </div>
     </div>
   `;
 }
 
+// ---------- page: dashboard ----------
+
 async function initDashboardPage(user) {
-  document.getElementById("welcome-message").textContent =
-    user.plan === "pro"
-      ? `Welcome back, ${user.name}. You're on the Pro plan - unlimited listings, unlimited requirements, full contact details.`
-      : `Welcome back, ${user.name}. You're on the Free plan. Upgrade to Pro for unlimited listings and full match contact details.`;
+  let welcome = `Welcome back, ${user.name}. You're on the Free plan. Upgrade to Pro or Premium for more room and full match contact details.`;
+  if (user.plan === "pro") {
+    welcome = `Welcome back, ${user.name}. You're on the Pro plan - up to 10 listings, 10 buyer requirements, full contact details, and photo upload.`;
+  } else if (user.plan === "premium") {
+    welcome = `Welcome back, ${user.name}. You're on the Premium plan - unlimited listings and requirements, plus your commission dashboard below.`;
+  }
+  document.getElementById("welcome-message").textContent = welcome;
 
   const [myListings, myRequirements, matches] = await Promise.all([
     api("/api/listings/mine"),
@@ -252,6 +326,21 @@ async function initDashboardPage(user) {
   document.getElementById("stat-listings").textContent = myListings.length;
   document.getElementById("stat-requirements").textContent = myRequirements.length;
   document.getElementById("stat-matches").textContent = matches.length;
+
+  // Commission dashboard - Pro & Premium only.
+  const showCommission = canSeeCommissionDashboardClient(user.plan);
+  const commissionSection = document.getElementById("commission-section");
+  if (showCommission) {
+    commissionSection.classList.remove("hidden");
+    const activeListings = myListings.filter((l) => l.status !== "closed");
+    const closedListings = myListings.filter((l) => l.status === "closed");
+    const potentialCommission = activeListings.reduce((sum, l) => sum + Number(l.price) * COMMISSION_RATE, 0);
+    const closedCommission = closedListings.reduce((sum, l) => sum + Number(l.price) * COMMISSION_RATE, 0);
+    document.getElementById("stat-potential-commission").textContent = formatPrice(Math.round(potentialCommission));
+    document.getElementById("stat-closed-commission").textContent = formatPrice(Math.round(closedCommission));
+  } else {
+    commissionSection.classList.add("hidden");
+  }
 
   // Matches
   const matchesEl = document.getElementById("matches-list");
@@ -275,8 +364,8 @@ async function initDashboardPage(user) {
               <div class="data-card-meta">
                 ${
                   counterpart.locked
-                    ? `<span class="locked-contact">Co-broke with: ${escapeHtml(counterpart.name)} - <a href="upgrade.html">Upgrade to Pro to view contact details</a></span>`
-                    : `Co-broke with: ${escapeHtml(counterpart.name)} - ${escapeHtml(counterpart.email)}${counterpart.phone ? " - " + escapeHtml(counterpart.phone) : ""}`
+                    ? `<span class="locked-contact">Co-broke with: ${escapeHtml(counterpart.name)}${verifiedTickHtml(counterpart)} - <a href="upgrade.html">Upgrade to view contact details</a></span>`
+                    : `Co-broke with: ${escapeHtml(counterpart.name)}${verifiedTickHtml(counterpart)} - ${escapeHtml(counterpart.email)}${counterpart.phone ? " - " + escapeHtml(counterpart.phone) : ""}`
                 }
               </div>
             </div>
@@ -291,7 +380,9 @@ async function initDashboardPage(user) {
   myListingsEl.innerHTML =
     myListings.length === 0
       ? `<p class="empty-state">You haven't posted any listings yet. <a href="post-listing.html">Post one</a>.</p>`
-      : myListings.map((l) => listingCardHtml(l, { showDelete: true })).join("");
+      : myListings
+          .map((l) => listingCardHtml(l, { showDelete: true, showEdit: true, showStatusToggle: true, showCommission }))
+          .join("");
 
   myListingsEl.querySelectorAll("[data-delete-listing]").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -301,12 +392,27 @@ async function initDashboardPage(user) {
     });
   });
 
-  // My requirements
+  myListingsEl.querySelectorAll("[data-toggle-status]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const newStatus = btn.dataset.currentStatus === "closed" ? "active" : "closed";
+      try {
+        await api(`/api/listings/${btn.dataset.toggleStatus}`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: newStatus }),
+        });
+        window.location.reload();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
+
+  // My buyer requirements
   const myReqEl = document.getElementById("my-requirements-list");
   myReqEl.innerHTML =
     myRequirements.length === 0
       ? `<p class="empty-state">You haven't posted any buyer requirements yet. <a href="post-requirement.html">Post one</a>.</p>`
-      : myRequirements.map((r) => requirementCardHtml(r, { showDelete: true })).join("");
+      : myRequirements.map((r) => requirementCardHtml(r, { showDelete: true, showEdit: true })).join("");
 
   myReqEl.querySelectorAll("[data-delete-requirement]").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -322,6 +428,9 @@ async function initDashboardPage(user) {
 async function initBrowsePage() {
   const stateSelect = document.getElementById("filter-state");
   const typeSelect = document.getElementById("filter-type");
+  const areaInput = document.getElementById("filter-area");
+  const priceMinInput = document.getElementById("filter-price-min");
+  const priceMaxInput = document.getElementById("filter-price-max");
   fillSelect(stateSelect, MALAYSIAN_STATES);
   fillSelect(typeSelect, PROPERTY_TYPES);
 
@@ -329,6 +438,9 @@ async function initBrowsePage() {
     const params = new URLSearchParams();
     if (stateSelect.value) params.set("state", stateSelect.value);
     if (typeSelect.value) params.set("propertyType", typeSelect.value);
+    if (areaInput.value.trim()) params.set("area", areaInput.value.trim());
+    if (priceMinInput.value) params.set("priceMin", priceMinInput.value);
+    if (priceMaxInput.value) params.set("priceMax", priceMaxInput.value);
 
     const listingsEl = document.getElementById("listings-list");
     listingsEl.innerHTML = `<p class="empty-state">Loading listings...</p>`;
@@ -340,11 +452,22 @@ async function initBrowsePage() {
         : listings.map((l) => listingCardHtml(l)).join("");
   }
 
-  stateSelect.addEventListener("change", loadListings);
-  typeSelect.addEventListener("change", loadListings);
+  [stateSelect, typeSelect].forEach((el) => el.addEventListener("change", loadListings));
+  [areaInput, priceMinInput, priceMaxInput].forEach((el) => {
+    el.addEventListener("change", loadListings);
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        loadListings();
+      }
+    });
+  });
   document.getElementById("filter-clear").addEventListener("click", () => {
     stateSelect.value = "";
     typeSelect.value = "";
+    areaInput.value = "";
+    priceMinInput.value = "";
+    priceMaxInput.value = "";
     loadListings();
   });
 
@@ -353,9 +476,78 @@ async function initBrowsePage() {
 
 // ---------- page: post-listing ----------
 
-function initPostListingPage() {
+async function initPostListingPage(user) {
   fillSelect(document.getElementById("propertyType"), PROPERTY_TYPES);
   fillSelect(document.getElementById("state"), MALAYSIAN_STATES);
+
+  const params = new URLSearchParams(window.location.search);
+  const editId = params.get("id");
+  const isEdit = Boolean(editId);
+
+  const titleEl = document.getElementById("listing-form-title");
+  const subtitleEl = document.getElementById("listing-form-subtitle");
+  const submitBtn = document.getElementById("listing-submit-btn");
+  const statusWrap = document.getElementById("status-field-wrap");
+  const photoUploadWrap = document.getElementById("photo-upload-wrap");
+  const photoLockedHint = document.getElementById("photo-upload-locked-hint");
+  const photoFileInput = document.getElementById("photoFile");
+  const photoUploadStatus = document.getElementById("photo-upload-status");
+  const photoUrlInput = document.getElementById("photoUrl");
+
+  // Uploading a real photo (vs. pasting a link) is a Pro & Premium feature.
+  const canUpload = canUploadPhotoClient(user.plan);
+  if (canUpload) {
+    photoUploadWrap.classList.remove("hidden");
+    photoFileInput.addEventListener("change", async () => {
+      const file = photoFileInput.files[0];
+      if (!file) return;
+      photoUploadStatus.textContent = "Uploading photo...";
+      try {
+        const formData = new FormData();
+        formData.append("photo", file);
+        const res = await fetch("/api/uploads/photo", {
+          method: "POST",
+          credentials: "same-origin",
+          body: formData,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Upload failed.");
+        photoUrlInput.value = data.url;
+        photoUploadStatus.textContent = "Photo uploaded.";
+      } catch (err) {
+        photoUploadStatus.textContent = err.message;
+      }
+    });
+  } else {
+    photoLockedHint.textContent =
+      "Uploading a real photo is a Pro & Premium feature. Paste a photo link above instead, or upgrade to unlock uploads.";
+  }
+
+  if (isEdit) {
+    titleEl.textContent = "Edit Listing";
+    subtitleEl.textContent = "Update your listing details below.";
+    submitBtn.textContent = "Save Changes";
+    statusWrap.classList.remove("hidden");
+
+    try {
+      const listing = await api(`/api/listings/${editId}`);
+      document.getElementById("title").value = listing.title || "";
+      document.getElementById("propertyType").value = listing.propertyType || "";
+      document.getElementById("state").value = listing.state || "";
+      document.getElementById("area").value = listing.area || "";
+      document.getElementById("price").value = listing.price != null ? listing.price : "";
+      document.getElementById("bedrooms").value = listing.bedrooms != null ? listing.bedrooms : "";
+      document.getElementById("bathrooms").value = listing.bathrooms != null ? listing.bathrooms : "";
+      document.getElementById("sizeSqft").value = listing.sizeSqft != null ? listing.sizeSqft : "";
+      photoUrlInput.value = listing.photoUrl || "";
+      document.getElementById("description").value = listing.description || "";
+      document.getElementById("status").value = listing.status || "active";
+    } catch (err) {
+      const msg = document.getElementById("listing-message");
+      msg.textContent = "Could not load this listing for editing.";
+      msg.className = "form-message error";
+    }
+  }
 
   document.getElementById("listing-form").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -363,23 +555,30 @@ function initPostListingPage() {
     msg.textContent = "";
     msg.className = "form-message";
 
+    const payload = {
+      title: document.getElementById("title").value,
+      propertyType: document.getElementById("propertyType").value,
+      state: document.getElementById("state").value,
+      area: document.getElementById("area").value,
+      price: document.getElementById("price").value,
+      bedrooms: document.getElementById("bedrooms").value,
+      bathrooms: document.getElementById("bathrooms").value,
+      sizeSqft: document.getElementById("sizeSqft").value,
+      photoUrl: photoUrlInput.value,
+      description: document.getElementById("description").value,
+    };
+    if (isEdit) {
+      payload.status = document.getElementById("status").value;
+    }
+
     try {
-      await api("/api/listings", {
-        method: "POST",
-        body: JSON.stringify({
-          title: document.getElementById("title").value,
-          propertyType: document.getElementById("propertyType").value,
-          state: document.getElementById("state").value,
-          area: document.getElementById("area").value,
-          price: document.getElementById("price").value,
-          bedrooms: document.getElementById("bedrooms").value,
-          bathrooms: document.getElementById("bathrooms").value,
-          sizeSqft: document.getElementById("sizeSqft").value,
-          photoUrl: document.getElementById("photoUrl").value,
-          description: document.getElementById("description").value,
-        }),
-      });
-      msg.textContent = "Listing posted! Redirecting to your dashboard...";
+      if (isEdit) {
+        await api(`/api/listings/${editId}`, { method: "PATCH", body: JSON.stringify(payload) });
+        msg.textContent = "Listing updated! Redirecting to your dashboard...";
+      } else {
+        await api("/api/listings", { method: "POST", body: JSON.stringify(payload) });
+        msg.textContent = "Listing posted! Redirecting to your dashboard...";
+      }
       msg.className = "form-message success";
       setTimeout(() => (window.location.href = "dashboard.html"), 900);
     } catch (err) {
@@ -391,9 +590,39 @@ function initPostListingPage() {
 
 // ---------- page: post-requirement ----------
 
-function initPostRequirementPage() {
+async function initPostRequirementPage() {
   fillSelect(document.getElementById("propertyType"), PROPERTY_TYPES);
   fillSelect(document.getElementById("state"), MALAYSIAN_STATES);
+
+  const params = new URLSearchParams(window.location.search);
+  const editId = params.get("id");
+  const isEdit = Boolean(editId);
+
+  const titleEl = document.getElementById("requirement-form-title");
+  const subtitleEl = document.getElementById("requirement-form-subtitle");
+  const submitBtn = document.getElementById("requirement-submit-btn");
+
+  if (isEdit) {
+    titleEl.textContent = "Edit Buyer Requirement";
+    subtitleEl.textContent = "Update what your client is looking for below.";
+    submitBtn.textContent = "Save Changes";
+
+    try {
+      const requirement = await api(`/api/requirements/${editId}`);
+      document.getElementById("clientLabel").value = requirement.clientLabel || "";
+      document.getElementById("propertyType").value = requirement.propertyType || "";
+      document.getElementById("state").value = requirement.state || "";
+      document.getElementById("area").value = requirement.area || "";
+      document.getElementById("budgetMin").value = requirement.budgetMin != null ? requirement.budgetMin : "";
+      document.getElementById("budgetMax").value = requirement.budgetMax != null ? requirement.budgetMax : "";
+      document.getElementById("bedrooms").value = requirement.bedrooms != null ? requirement.bedrooms : "";
+      document.getElementById("notes").value = requirement.notes || "";
+    } catch (err) {
+      const msg = document.getElementById("requirement-message");
+      msg.textContent = "Could not load this buyer requirement for editing.";
+      msg.className = "form-message error";
+    }
+  }
 
   document.getElementById("requirement-form").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -401,21 +630,25 @@ function initPostRequirementPage() {
     msg.textContent = "";
     msg.className = "form-message";
 
+    const payload = {
+      clientLabel: document.getElementById("clientLabel").value,
+      propertyType: document.getElementById("propertyType").value,
+      state: document.getElementById("state").value,
+      area: document.getElementById("area").value,
+      budgetMin: document.getElementById("budgetMin").value,
+      budgetMax: document.getElementById("budgetMax").value,
+      bedrooms: document.getElementById("bedrooms").value,
+      notes: document.getElementById("notes").value,
+    };
+
     try {
-      await api("/api/requirements", {
-        method: "POST",
-        body: JSON.stringify({
-          clientLabel: document.getElementById("clientLabel").value,
-          propertyType: document.getElementById("propertyType").value,
-          state: document.getElementById("state").value,
-          area: document.getElementById("area").value,
-          budgetMin: document.getElementById("budgetMin").value,
-          budgetMax: document.getElementById("budgetMax").value,
-          bedrooms: document.getElementById("bedrooms").value,
-          notes: document.getElementById("notes").value,
-        }),
-      });
-      msg.textContent = "Buyer requirement posted! Redirecting to your dashboard...";
+      if (isEdit) {
+        await api(`/api/requirements/${editId}`, { method: "PATCH", body: JSON.stringify(payload) });
+        msg.textContent = "Buyer requirement updated! Redirecting to your dashboard...";
+      } else {
+        await api("/api/requirements", { method: "POST", body: JSON.stringify(payload) });
+        msg.textContent = "Buyer requirement posted! Redirecting to your dashboard...";
+      }
       msg.className = "form-message success";
       setTimeout(() => (window.location.href = "dashboard.html"), 900);
     } catch (err) {
@@ -429,10 +662,13 @@ function initPostRequirementPage() {
 
 function initUpgradePage(user) {
   const msg = document.getElementById("current-plan-message");
-  msg.textContent =
-    user.plan === "pro"
-      ? "You're already on the Pro plan. Thanks for supporting Hartahub!"
-      : "You're currently on the Free plan.";
+  if (user.plan === "premium") {
+    msg.textContent = "You're on the Premium plan. Thanks for supporting Hartahub!";
+  } else if (user.plan === "pro") {
+    msg.textContent = "You're on the Pro plan. Upgrade to Premium for unlimited listings and the commission dashboard.";
+  } else {
+    msg.textContent = "You're currently on the Free plan.";
+  }
 }
 
 // ---------- boot ----------
@@ -463,8 +699,8 @@ async function boot() {
   if (page === "home") initHomePage();
   if (page === "dashboard") initDashboardPage(user);
   if (page === "browse") initBrowsePage();
-  if (page === "post-listing") initPostListingPage();
-  if (page === "post-requirement") initPostRequirementPage();
+  if (page === "post-listing") initPostListingPage(user);
+  if (page === "post-requirement") initPostRequirementPage(user);
   if (page === "upgrade") initUpgradePage(user);
 }
 
