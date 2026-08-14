@@ -136,6 +136,31 @@ function initNavToggle() {
   });
 }
 
+// ---------- collapsible sections (dashboard: Matches / My Listings / My Buyer Requirements) ----------
+
+function initCollapsibles() {
+  document.querySelectorAll(".collapsible").forEach((section) => {
+    const toggle = section.querySelector(".section-toggle");
+    if (!toggle) return;
+    const key = section.dataset.collapsible;
+    const storageKey = key ? "hh-collapse-" + key : null;
+    const stored = storageKey ? localStorage.getItem(storageKey) : null;
+
+    function setOpen(open) {
+      section.dataset.open = open ? "true" : "false";
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+
+    setOpen(stored !== "closed");
+
+    toggle.addEventListener("click", () => {
+      const isOpen = section.dataset.open !== "false";
+      setOpen(!isOpen);
+      if (storageKey) localStorage.setItem(storageKey, isOpen ? "closed" : "open");
+    });
+  });
+}
+
 // ---------- scroll-reveal (entry animation for landing-page sections) ----------
 
 function initScrollReveal() {
@@ -740,6 +765,7 @@ function initUpgradePage(user) {
 async function boot() {
   initNavToggle();
   initScrollReveal();
+  initCollapsibles();
 
   const page = document.body.dataset.page;
   let user = null;

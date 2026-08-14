@@ -61,31 +61,58 @@
       </div>
     </div>
 
-    <h2>Your Matches</h2>
-    <p class="hint">
-      These are pairings where a listing and a buyer requirement fit each
-      other on property type, state, and budget - either yours or another
-      agent's.
-    </p>
-    <div id="matches-list" class="card-list">
-      <div class="skeleton-list">
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
+    <div class="collapsible" data-collapsible="matches" data-open="true">
+      <button type="button" class="section-toggle" aria-expanded="true" aria-controls="matches-panel">
+        <h2>Your Matches</h2>
+        <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="collapsible-body">
+        <div class="collapsible-body-inner">
+          <p class="hint">
+            These are pairings where a listing and a buyer requirement fit each
+            other on property type, state, and budget - either yours or another
+            agent's.
+          </p>
+          <div id="matches-list" class="card-list">
+            <div class="skeleton-list">
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <h2>My Listings</h2>
-    <div id="my-listings-list" class="card-list">
-      <div class="skeleton-list">
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
+    <div class="collapsible" data-collapsible="my-listings" data-open="false">
+      <button type="button" class="section-toggle" aria-expanded="false" aria-controls="my-listings-panel">
+        <h2>My Listings</h2>
+        <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="collapsible-body">
+        <div class="collapsible-body-inner">
+          <div id="my-listings-list" class="card-list">
+            <div class="skeleton-list">
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <h2>My Buyer Requirements</h2>
-    <div id="my-requirements-list" class="card-list">
-      <div class="skeleton-list">
-        <div class="skeleton-card"></div>
+    <div class="collapsible" data-collapsible="my-requirements" data-open="false">
+      <button type="button" class="section-toggle" aria-expanded="false" aria-controls="my-requirements-panel">
+        <h2>My Buyer Requirements</h2>
+        <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="collapsible-body">
+        <div class="collapsible-body-inner">
+          <div id="my-requirements-list" class="card-list">
+            <div class="skeleton-list">
+              <div class="skeleton-card"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </main>
