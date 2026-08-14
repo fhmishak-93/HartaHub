@@ -4,20 +4,27 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Post a Buyer Requirement - Hartahub</title>
+<meta name="description" content="Tell Hartahub what your client is looking for and get matched automatically against listings from agents across Malaysia." />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body data-page="post-requirement">
+  <a href="#main" class="skip-link">Skip to content</a>
   <header class="site-header">
     <div class="container header-inner">
       <a href="index.html" class="logo">Harta<span>hub</span></a>
+      <button id="nav-toggle" class="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
       <nav id="nav-links" class="nav-links"></nav>
     </div>
   </header>
+  <div id="nav-scrim" class="nav-scrim"></div>
 
-  <main class="container page page-narrow">
+  <main id="main" class="container page page-narrow">
     <h1 id="requirement-form-title">Post a Buyer Requirement</h1>
     <p class="page-subtitle" id="requirement-form-subtitle">
       Tell Hartahub what your client is looking for, and we'll auto-match it

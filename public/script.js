@@ -73,6 +73,11 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// Skeleton placeholder shown while a list is loading, instead of plain text.
+function skeletonListHtml(count = 3) {
+  return `<div class="skeleton-list">${Array.from({ length: count }, () => `<div class="skeleton-card"></div>`).join("")}</div>`;
+}
+
 // Pro and Premium agents see full contact details and the commission
 // dashboard; Free agents don't. Mirrors utils/plan.js on the server.
 function canSeeCommissionDashboardClient(tier) {
@@ -96,6 +101,65 @@ function daysOnPlatform(createdAt) {
 function verifiedTickHtml(agent) {
   if (!agent || !agent.renVerified) return "";
   return `<span class="verified-tick" title="Verified REN agent">&#10003;</span>`;
+}
+
+// ---------- mobile nav drawer ----------
+
+function initNavToggle() {
+  const toggle = document.getElementById("nav-toggle");
+  const nav = document.getElementById("nav-links");
+  const scrim = document.getElementById("nav-scrim");
+  if (!toggle || !nav) return;
+
+  function closeMenu() {
+    document.body.classList.remove("nav-open");
+    toggle.setAttribute("aria-expanded", "false");
+  }
+  function openMenu() {
+    document.body.classList.add("nav-open");
+    toggle.setAttribute("aria-expanded", "true");
+  }
+
+  toggle.addEventListener("click", () => {
+    if (document.body.classList.contains("nav-open")) closeMenu();
+    else openMenu();
+  });
+  if (scrim) scrim.addEventListener("click", closeMenu);
+  nav.addEventListener("click", (e) => {
+    if (e.target.closest("a")) closeMenu();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeMenu();
+  });
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 860) closeMenu();
+  });
+}
+
+// ---------- scroll-reveal (entry animation for landing-page sections) ----------
+
+function initScrollReveal() {
+  const items = document.querySelectorAll(".reveal");
+  if (!items.length) return;
+  if (!("IntersectionObserver" in window)) {
+    items.forEach((el) => el.classList.add("is-visible"));
+    return;
+  }
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+  );
+  items.forEach((el, i) => {
+    el.style.transitionDelay = `${Math.min(i % 4, 3) * 0.08}s`;
+    observer.observe(el);
+  });
 }
 
 // ---------- nav bar ----------
@@ -130,7 +194,7 @@ function renderNav(user) {
     // Sign Up button that jumps down to the account form.
     nav.innerHTML = `
       <a href="#get-started" class="js-goto-login">Log In</a>
-      <a href="#get-started" class="btn btn-primary js-goto-signup">Sign Up Free</a>
+      <a href="#get-started" class="btn btn-primary js-goto-signup">Get Started Free</a>
     `;
   }
 }
@@ -443,7 +507,7 @@ async function initBrowsePage() {
     if (priceMaxInput.value) params.set("priceMax", priceMaxInput.value);
 
     const listingsEl = document.getElementById("listings-list");
-    listingsEl.innerHTML = `<p class="empty-state">Loading listings...</p>`;
+    listingsEl.innerHTML = skeletonListHtml(4);
 
     const listings = await api("/api/listings?" + params.toString());
     listingsEl.innerHTML =
@@ -674,6 +738,9 @@ function initUpgradePage(user) {
 // ---------- boot ----------
 
 async function boot() {
+  initNavToggle();
+  initScrollReveal();
+
   const page = document.body.dataset.page;
   let user = null;
 

@@ -4,20 +4,27 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dashboard - Hartahub</title>
+<meta name="description" content="Your Hartahub dashboard - listings, buyer requirements, and automatic co-broking matches in one place." />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body data-page="dashboard">
+  <a href="#main" class="skip-link">Skip to content</a>
   <header class="site-header">
     <div class="container header-inner">
       <a href="index.html" class="logo">Harta<span>hub</span></a>
+      <button id="nav-toggle" class="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
       <nav id="nav-links" class="nav-links"></nav>
     </div>
   </header>
+  <div id="nav-scrim" class="nav-scrim"></div>
 
-  <main class="container page">
+  <main id="main" class="container page">
     <h1>Your Dashboard</h1>
     <p class="page-subtitle" id="welcome-message"></p>
 
@@ -61,17 +68,25 @@
       agent's.
     </p>
     <div id="matches-list" class="card-list">
-      <p class="empty-state">Loading matches...</p>
+      <div class="skeleton-list">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
     </div>
 
     <h2>My Listings</h2>
     <div id="my-listings-list" class="card-list">
-      <p class="empty-state">Loading...</p>
+      <div class="skeleton-list">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
     </div>
 
     <h2>My Buyer Requirements</h2>
     <div id="my-requirements-list" class="card-list">
-      <p class="empty-state">Loading...</p>
+      <div class="skeleton-list">
+        <div class="skeleton-card"></div>
+      </div>
     </div>
   </main>
 
