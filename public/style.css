@@ -612,9 +612,42 @@ textarea::placeholder {
   word-break: break-word;
 }
 
+.desc-wrap {
+  margin: 4px 0;
+}
+
 .data-card-description {
   white-space: pre-line;
-  line-height: 1.7;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+.desc-wrap.is-expanded .data-card-description {
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  display: block;
+  overflow: visible;
+}
+
+.desc-toggle {
+  display: inline-block;
+  margin-top: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--gold-dark);
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.desc-toggle:hover {
+  text-decoration: underline;
 }
 
 .price-tag {
@@ -1707,9 +1740,13 @@ textarea::placeholder {
   /* Keep listing cards compact on mobile - photo, title, location, price,
      and status tags only. Description and agent contact text add scroll
      without adding scanability on a small screen. */
-  .data-card-clean .data-card-meta,
   .data-card-clean .info-tag-days {
     display: none;
+  }
+
+  .data-card-description {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
 
   .data-card-clean .data-card-body {

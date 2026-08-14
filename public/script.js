@@ -216,6 +216,20 @@ function initScrollReveal() {
   });
 }
 
+// ---------- listing description "Read more" toggle (event delegation, so it
+// works for cards rendered/re-rendered after the initial page load) ----------
+
+function initDescToggles() {
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".desc-toggle");
+    if (!btn) return;
+    const wrap = btn.closest(".desc-wrap");
+    if (!wrap) return;
+    const expanded = wrap.classList.toggle("is-expanded");
+    btn.textContent = expanded ? "Show less" : "Read more";
+  });
+}
+
 // ---------- nav bar ----------
 
 function renderNav(user) {
@@ -358,6 +372,14 @@ function listingCardHtml(listing, options = {}) {
     tags.push(`<span class="info-tag info-tag-commission">Est. commission ${formatPrice(Math.round(commission))}</span>`);
   }
 
+  const hasLongDescription = listing.description && listing.description.length > 160;
+  const descriptionHtml = listing.description
+    ? `<div class="desc-wrap">
+        <div class="data-card-meta data-card-description">${formatDescription(listing.description)}</div>
+        ${hasLongDescription ? `<button type="button" class="desc-toggle">Read more</button>` : ""}
+      </div>`
+    : "";
+
   const editBtn = options.showEdit
     ? `<a class="btn btn-sm btn-edit" href="post-listing.html?id=${listing._id}">Edit</a>`
     : "";
@@ -382,7 +404,7 @@ function listingCardHtml(listing, options = {}) {
   }</div>
         <div class="price-tag">${formatPrice(listing.price)}</div>
         <div class="tag-row">${tags.join("")}</div>
-        ${listing.description ? `<div class="data-card-meta data-card-description">${formatDescription(listing.description)}</div>` : ""}
+        ${descriptionHtml}
         ${agentInfo}
         ${editBtn || statusToggleBtn || deleteBtn ? `<div class="card-actions">${editBtn}${statusToggleBtn}${deleteBtn}</div>` : ""}
       </div>
@@ -810,6 +832,7 @@ async function boot() {
   initNavToggle();
   initScrollReveal();
   initCollapsibles();
+  initDescToggles();
 
   const page = document.body.dataset.page;
   let user = null;
