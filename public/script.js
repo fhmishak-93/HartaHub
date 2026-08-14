@@ -78,6 +78,35 @@ function skeletonListHtml(count = 3) {
   return `<div class="skeleton-list">${Array.from({ length: count }, () => `<div class="skeleton-card"></div>`).join("")}</div>`;
 }
 
+// Agents paste listing descriptions as one dense emoji-separated block with
+// no real line breaks. Break it into readable lines/paragraphs: a new line
+// before each bullet-style symbol, and a paragraph break on "====" dividers.
+// Rendered with `white-space: pre-line` (see .data-card-description) so the
+// newlines inserted here actually show up as line breaks.
+function formatDescription(raw) {
+  if (!raw) return "";
+  let text = escapeHtml(raw);
+  text = text.replace(/=[=\s]{2,}/g, "\n\n");
+  // Only trim trailing spaces/tabs before a bullet symbol - not newlines,
+  // so a paragraph break already inserted above (e.g. from "====") survives.
+  text = text.replace(/[ \t]*([\u{2022}\u{00BB}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{1F300}-\u{1FAFF}\u{2190}-\u{21FF}])/gu, "\n$1");
+  text = text.replace(/\n{3,}/g, "\n\n").trim();
+  return text;
+}
+
+// Builds a wa.me link for a Malaysian phone number (assumes local numbers
+// start with 0 and adds the 60 country code) with an optional prefilled message.
+function whatsappLink(phone, message) {
+  if (!phone) return null;
+  let digits = String(phone).replace(/\D/g, "");
+  if (!digits) return null;
+  if (digits.startsWith("0")) digits = "60" + digits.slice(1);
+  else if (!digits.startsWith("60")) digits = "60" + digits;
+  return `https://wa.me/${digits}${message ? "?text=" + encodeURIComponent(message) : ""}`;
+}
+
+const WHATSAPP_ICON_SVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm0 18.2a8.1 8.1 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.7.8-.8 1-.2.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.4c.1-.1.2-.2.2-.4.1-.1 0-.3 0-.4l-.7-1.7c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9s.8 2.2.9 2.4c.1.2 1.6 2.5 3.9 3.4.5.2.9.4 1.3.5.5.2 1 .1 1.4.1.4-.1 1.3-.5 1.5-1 .2-.5.2-.9.1-1Z"/></svg>`;
+
 // Pro and Premium agents see full contact details and the commission
 // dashboard; Free agents don't. Mirrors utils/plan.js on the server.
 function canSeeCommissionDashboardClient(tier) {
@@ -353,7 +382,7 @@ function listingCardHtml(listing, options = {}) {
   }</div>
         <div class="price-tag">${formatPrice(listing.price)}</div>
         <div class="tag-row">${tags.join("")}</div>
-        ${listing.description ? `<div class="data-card-meta">${escapeHtml(listing.description)}</div>` : ""}
+        ${listing.description ? `<div class="data-card-meta data-card-description">${formatDescription(listing.description)}</div>` : ""}
         ${agentInfo}
         ${editBtn || statusToggleBtn || deleteBtn ? `<div class="card-actions">${editBtn}${statusToggleBtn}${deleteBtn}</div>` : ""}
       </div>
@@ -457,6 +486,21 @@ async function initDashboardPage(user) {
                     : `Co-broke with: ${escapeHtml(counterpart.name)}${verifiedTickHtml(counterpart)} - ${escapeHtml(counterpart.email)}${counterpart.phone ? " - " + escapeHtml(counterpart.phone) : ""}`
                 }
               </div>
+              ${
+                counterpart.locked
+                  ? ""
+                  : `<div class="match-cta">
+                      <p class="match-cta-text">Ask for viewing. Let's try to close this deal.</p>
+                      ${
+                        counterpart.phone
+                          ? `<a class="btn btn-whatsapp" href="${whatsappLink(
+                              counterpart.phone,
+                              `Hi ${counterpart.name}, saw we have a match on Hartahub - "${m.listing.title}" for ${m.requirement.clientLabel}. Can we arrange a viewing?`
+                            )}" target="_blank" rel="noopener">${WHATSAPP_ICON_SVG} WhatsApp ${escapeHtml(counterpart.name.split(" ")[0])}</a>`
+                          : ""
+                      }
+                    </div>`
+              }
             </div>
           </div>
         `;

@@ -612,6 +612,11 @@ textarea::placeholder {
   word-break: break-word;
 }
 
+.data-card-description {
+  white-space: pre-line;
+  line-height: 1.7;
+}
+
 .price-tag {
   display: inline-block;
   color: var(--gold-dark);
@@ -1393,7 +1398,8 @@ textarea::placeholder {
 
 .data-card-clean .data-card-photo {
   width: 100%;
-  height: 190px;
+  aspect-ratio: 1 / 1;
+  height: auto;
   object-fit: cover;
   background: var(--cream);
   display: block;
@@ -1401,7 +1407,7 @@ textarea::placeholder {
 
 .data-card-clean .data-card-photo-placeholder {
   width: 100%;
-  height: 190px;
+  aspect-ratio: 1 / 1;
   background: repeating-linear-gradient(135deg, var(--cream), var(--cream) 10px, #f1ede4 10px, #f1ede4 20px);
   display: flex;
   align-items: center;
@@ -1478,6 +1484,40 @@ textarea::placeholder {
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 12px;
+}
+
+/* Match card - "ask for viewing" nudge + direct WhatsApp co-broke button */
+.match-cta {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  width: 100%;
+}
+
+.match-cta-text {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #25d366;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.3);
+}
+
+.btn-whatsapp:hover {
+  background: #20bd5a;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(37, 211, 102, 0.4);
+}
+
+.btn-whatsapp svg {
+  flex-shrink: 0;
 }
 
 /* Commission dashboard section */
@@ -1670,11 +1710,6 @@ textarea::placeholder {
   .data-card-clean .data-card-meta,
   .data-card-clean .info-tag-days {
     display: none;
-  }
-
-  .data-card-clean .data-card-photo,
-  .data-card-clean .data-card-photo-placeholder {
-    height: 160px;
   }
 
   .data-card-clean .data-card-body {
