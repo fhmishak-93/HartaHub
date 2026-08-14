@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { MALAYSIAN_STATES, PROPERTY_TYPES } = require("../utils/constants");
+const { MALAYSIAN_STATES, PROPERTY_TYPES, TENURE_OPTIONS, BUMI_LOT_OPTIONS } = require("../utils/constants");
 
 const listingSchema = new mongoose.Schema({
   agent: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -14,6 +14,11 @@ const listingSchema = new mongoose.Schema({
   bedrooms: { type: Number, min: 0 },
   bathrooms: { type: Number, min: 0 },
   sizeSqft: { type: Number, min: 0 },
+  tenure: { type: String, enum: TENURE_OPTIONS },
+  bumiLot: { type: String, enum: BUMI_LOT_OPTIONS },
+  // Condo/apartment-specific - left unset for other property types.
+  maintenanceFee: { type: Number, min: 0 },
+  floorLevel: { type: String, trim: true },
   description: { type: String, trim: true },
   photoUrl: { type: String, trim: true },
   // "active" listings count toward the commission dashboard's potential

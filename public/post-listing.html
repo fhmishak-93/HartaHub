@@ -64,8 +64,33 @@
         </div>
       </div>
 
-      <label for="photoUrl">Photo Link</label>
-      <input type="url" id="photoUrl" placeholder="https://..." />
+      <div class="form-row">
+        <div>
+          <label for="tenure">Tenure</label>
+          <select id="tenure" required>
+            <option value="">Select tenure</option>
+          </select>
+        </div>
+        <div>
+          <label for="bumiLot">Lot Status</label>
+          <select id="bumiLot" required>
+            <option value="">Select lot status</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="condo-fields-wrap" class="form-row hidden">
+        <div>
+          <label for="maintenanceFee">Maintenance Fee (RM/month)</label>
+          <input type="number" id="maintenanceFee" min="0" placeholder="e.g. 250" />
+        </div>
+        <div>
+          <label for="floorLevel">Floor Level</label>
+          <input type="text" id="floorLevel" placeholder="e.g. 15 or Ground Floor" />
+        </div>
+      </div>
+
+      <input type="hidden" id="photoUrl" />
 
       <div id="photo-upload-wrap" class="hidden">
         <label for="photoFile">Or upload 1 front photo of the unit (Pro &amp; Premium)</label>

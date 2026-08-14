@@ -34,6 +34,9 @@ const MALAYSIAN_STATES = [
   "Terengganu",
 ];
 
+const TENURE_OPTIONS = ["Freehold", "Leasehold"];
+const BUMI_LOT_OPTIONS = ["Bumi Lot", "Non-Bumi Lot"];
+
 const COMMISSION_RATE = 0.03;
 
 // Pages that don't require a logged-in user.
@@ -360,6 +363,12 @@ function listingCardHtml(listing, options = {}) {
     : "";
 
   const tags = [`<span class="info-tag info-tag-days">${daysOnPlatform(listing.createdAt)} days on Hartahub</span>`];
+  if (listing.tenure) {
+    tags.push(`<span class="info-tag">${escapeHtml(listing.tenure)}</span>`);
+  }
+  if (listing.bumiLot) {
+    tags.push(`<span class="info-tag">${escapeHtml(listing.bumiLot)}</span>`);
+  }
   if (listing.status === "closed") {
     tags.push(`<span class="info-tag info-tag-closed">Closed</span>`);
   }
@@ -632,8 +641,11 @@ async function initBrowsePage() {
 // ---------- page: post-listing ----------
 
 async function initPostListingPage(user) {
-  fillSelect(document.getElementById("propertyType"), PROPERTY_TYPES);
+  const propertyTypeSelect = document.getElementById("propertyType");
+  fillSelect(propertyTypeSelect, PROPERTY_TYPES);
   fillSelect(document.getElementById("state"), MALAYSIAN_STATES);
+  fillSelect(document.getElementById("tenure"), TENURE_OPTIONS);
+  fillSelect(document.getElementById("bumiLot"), BUMI_LOT_OPTIONS);
 
   const params = new URLSearchParams(window.location.search);
   const editId = params.get("id");
@@ -648,6 +660,14 @@ async function initPostListingPage(user) {
   const photoFileInput = document.getElementById("photoFile");
   const photoUploadStatus = document.getElementById("photo-upload-status");
   const photoUrlInput = document.getElementById("photoUrl");
+
+  // Maintenance fee & floor level only make sense for condos/apartments.
+  const condoFieldsWrap = document.getElementById("condo-fields-wrap");
+  function toggleCondoFields() {
+    condoFieldsWrap.classList.toggle("hidden", propertyTypeSelect.value !== "Condominium/Apartment");
+  }
+  propertyTypeSelect.addEventListener("change", toggleCondoFields);
+  toggleCondoFields();
 
   // Uploading a real photo (vs. pasting a link) is a Pro & Premium feature.
   const canUpload = canUploadPhotoClient(user.plan);
@@ -675,7 +695,7 @@ async function initPostListingPage(user) {
     });
   } else {
     photoLockedHint.textContent =
-      "Uploading a real photo is a Pro & Premium feature. Paste a photo link above instead, or upgrade to unlock uploads.";
+      "Uploading a real photo is a Pro & Premium feature. Upgrade to add a photo to your listing.";
   }
 
   if (isEdit) {
@@ -694,6 +714,11 @@ async function initPostListingPage(user) {
       document.getElementById("bedrooms").value = listing.bedrooms != null ? listing.bedrooms : "";
       document.getElementById("bathrooms").value = listing.bathrooms != null ? listing.bathrooms : "";
       document.getElementById("sizeSqft").value = listing.sizeSqft != null ? listing.sizeSqft : "";
+      document.getElementById("tenure").value = listing.tenure || "";
+      document.getElementById("bumiLot").value = listing.bumiLot || "";
+      document.getElementById("maintenanceFee").value = listing.maintenanceFee != null ? listing.maintenanceFee : "";
+      document.getElementById("floorLevel").value = listing.floorLevel || "";
+      toggleCondoFields();
       photoUrlInput.value = listing.photoUrl || "";
       document.getElementById("description").value = listing.description || "";
       document.getElementById("status").value = listing.status || "active";
@@ -719,9 +744,15 @@ async function initPostListingPage(user) {
       bedrooms: document.getElementById("bedrooms").value,
       bathrooms: document.getElementById("bathrooms").value,
       sizeSqft: document.getElementById("sizeSqft").value,
+      tenure: document.getElementById("tenure").value,
+      bumiLot: document.getElementById("bumiLot").value,
       photoUrl: photoUrlInput.value,
       description: document.getElementById("description").value,
     };
+    if (propertyTypeSelect.value === "Condominium/Apartment") {
+      payload.maintenanceFee = document.getElementById("maintenanceFee").value;
+      payload.floorLevel = document.getElementById("floorLevel").value;
+    }
     if (isEdit) {
       payload.status = document.getElementById("status").value;
     }
