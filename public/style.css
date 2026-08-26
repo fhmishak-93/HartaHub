@@ -122,7 +122,11 @@ p {
   align-items: center;
   position: sticky;
   top: 0;
-  z-index: 100;
+  /* Must stay above .nav-scrim/.nav-links (z-index 200/210): position:sticky
+     creates a stacking context, so a lower value here traps the whole header
+     - including the mobile nav-links drawer nested inside it - underneath
+     the scrim overlay, silently swallowing every tap on the drawer's links. */
+  z-index: 300;
   box-shadow: var(--shadow-md);
 }
 
