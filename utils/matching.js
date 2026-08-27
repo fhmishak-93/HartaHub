@@ -26,6 +26,11 @@
 // Matches below MIN_MATCH_SCORE are dropped entirely, so a technically-passed
 // pair with a terrible area/bedroom fit doesn't clutter the dashboard.
 //
+// On top of the weighted score, a requirement whose buyer has a loan
+// eligibility check on file gets a flat LOAN_CHECKED_BONUS added (capped at
+// 100) - a pre-checked buyer is a more serious, ready-to-close lead, so they
+// get priority in the ranking without needing their own weighted slice.
+//
 // Still plain rule-based scoring - no AI/ML involved, which keeps it fast,
 // predictable, and easy to explain to an agent ("why is this 62%?").
 
@@ -37,6 +42,7 @@ const SCORE_WEIGHTS = {
 };
 
 const MIN_MATCH_SCORE = 30;
+const LOAN_CHECKED_BONUS = 5;
 
 function isMatch(listing, requirement) {
   return (
@@ -113,7 +119,11 @@ function computeMatchScore(listing, requirement) {
   for (const key of Object.keys(SCORE_WEIGHTS)) {
     total += scores[key] * SCORE_WEIGHTS[key];
   }
-  return Math.round(total / 100);
+  let score = Math.round(total / 100);
+  if (requirement.loanChecked) {
+    score = Math.min(100, score + LOAN_CHECKED_BONUS);
+  }
+  return score;
 }
 
 // Given all listings and all requirements, return every matching pair
@@ -134,4 +144,4 @@ function computeMatches(listings, requirements) {
   return matches;
 }
 
-module.exports = { isMatch, computeMatchScore, computeMatches, MIN_MATCH_SCORE };
+module.exports = { isMatch, computeMatchScore, computeMatches, MIN_MATCH_SCORE, LOAN_CHECKED_BONUS };

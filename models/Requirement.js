@@ -23,6 +23,11 @@ const requirementSchema = new mongoose.Schema({
   // only for now - captured for the agent's own reference, not yet scored.
   tenurePreference: { type: String, enum: TENURE_PREFERENCE_OPTIONS, default: "Any" },
   bumiLotPreference: { type: String, enum: BUMI_LOT_PREFERENCE_OPTIONS, default: "Any" },
+  // Loan eligibility check - a buyer whose financing has been pre-checked is
+  // a more serious lead, so this earns a small match-score bonus (see
+  // utils/matching.js) and shows as a green "Loan Checked" badge.
+  loanChecked: { type: Boolean, default: false },
+  loanAmount: { type: Number, min: 0 }, // eligible loan amount, only meaningful when loanChecked is true
   notes: { type: String, trim: true },
   createdAt: { type: Date, default: Date.now },
 });

@@ -48,6 +48,8 @@ router.post("/", requireAuth, async (req, res) => {
       bedrooms,
       tenurePreference,
       bumiLotPreference,
+      loanChecked,
+      loanAmount,
       notes,
     } = req.body;
 
@@ -86,6 +88,8 @@ router.post("/", requireAuth, async (req, res) => {
       bedrooms: bedrooms || undefined,
       tenurePreference: tenurePreference || undefined,
       bumiLotPreference: bumiLotPreference || undefined,
+      loanChecked: Boolean(loanChecked),
+      loanAmount: loanChecked ? loanAmount || undefined : undefined,
       notes,
     });
 
@@ -123,12 +127,19 @@ router.patch("/:id", requireAuth, async (req, res) => {
       "bedrooms",
       "tenurePreference",
       "bumiLotPreference",
+      "loanChecked",
+      "loanAmount",
       "notes",
     ];
     for (const field of editable) {
       if (req.body[field] !== undefined && req.body[field] !== "") {
         requirement[field] = req.body[field];
       }
+    }
+    // Unchecking the loan box clears any previously-saved amount, rather
+    // than leaving a stale loan amount attached to an unchecked requirement.
+    if (req.body.loanChecked === false) {
+      requirement.loanAmount = undefined;
     }
 
     // Only re-validate area if this request actually touched area or state -

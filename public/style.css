@@ -358,6 +358,19 @@ body.nav-open .nav-toggle span:nth-child(3) {
   margin-top: 8px;
 }
 
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  accent-color: var(--gold-dark);
+  cursor: pointer;
+}
+
 input,
 select,
 textarea {
@@ -1501,6 +1514,13 @@ textarea::placeholder {
   background: rgba(34, 139, 87, 0.12);
   color: #1e7e4f;
   border-color: rgba(34, 139, 87, 0.3);
+}
+
+.info-tag-loan-checked {
+  background: rgba(34, 139, 87, 0.14);
+  color: #1e7e4f;
+  border-color: rgba(34, 139, 87, 0.35);
+  font-weight: 700;
 }
 
 .info-tag-commission {

@@ -39,6 +39,19 @@ const BUMI_LOT_OPTIONS = ["Bumi Lot", "Non-Bumi Lot"];
 const TENURE_PREFERENCE_OPTIONS = ["Any", "Freehold", "Leasehold"];
 const BUMI_LOT_PREFERENCE_OPTIONS = ["Any", "Bumi Lot", "Non-Bumi Lot"];
 
+// Fixed budget bands for the buyer requirement form - must stay identical to
+// utils/constants.js on the server. The gap between RM650,000 and
+// RM800,000 is intentional, as requested.
+const BUDGET_RANGES = [
+  { key: "150000-250000", min: 150000, max: 250000, label: "RM150,000 - RM250,000" },
+  { key: "251000-350000", min: 251000, max: 350000, label: "RM251,000 - RM350,000" },
+  { key: "351000-450000", min: 351000, max: 450000, label: "RM351,000 - RM450,000" },
+  { key: "451000-550000", min: 451000, max: 550000, label: "RM451,000 - RM550,000" },
+  { key: "551000-650000", min: 551000, max: 650000, label: "RM551,000 - RM650,000" },
+  { key: "800000-1000000", min: 800000, max: 1000000, label: "RM800,000 - RM1,000,000" },
+  { key: "1000001-10000000", min: 1000001, max: 10000000, label: "Above RM1,000,000" },
+];
+
 // Structured area/town list, keyed by state - must stay identical to
 // utils/areas.js on the server. Drives the dependent Area dropdown on both
 // the Post Listing and Post Buyer Requirement forms, so matching.js can
@@ -162,6 +175,22 @@ function fillAreaSelect(select, state, selectedValue) {
   }
 }
 
+// Populates the Budget Range <select> from BUDGET_RANGES, keeping its own
+// placeholder option (first <option>).
+function fillBudgetRangeSelect(select) {
+  const placeholderText = select.options.length ? select.options[0].textContent : "Select budget range";
+  select.innerHTML = "";
+  select.appendChild(new Option(placeholderText, ""));
+  BUDGET_RANGES.forEach((r) => select.appendChild(new Option(r.label, r.key)));
+}
+
+// Finds which fixed range a min/max pair belongs to, or null if it's a
+// legacy value (e.g. a free-typed budget from before fixed ranges existed).
+function findBudgetRangeKey(min, max) {
+  const range = BUDGET_RANGES.find((r) => r.min === Number(min) && r.max === Number(max));
+  return range ? range.key : null;
+}
+
 function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str == null ? "" : String(str);
@@ -225,6 +254,15 @@ function daysOnPlatform(createdAt) {
 function verifiedTickHtml(agent) {
   if (!agent || !agent.renVerified) return "";
   return `<span class="verified-tick" title="Verified REN agent">&#10003;</span>`;
+}
+
+// Green badge for a buyer requirement whose loan eligibility has been
+// checked - also earns a small priority bonus in the match score itself
+// (server-side, see utils/matching.js).
+function loanCheckedBadgeHtml(requirement) {
+  if (!requirement || !requirement.loanChecked) return "";
+  const amount = requirement.loanAmount ? ` - ${formatPrice(requirement.loanAmount)}` : "";
+  return `<span class="info-tag info-tag-loan-checked">&#10003; Loan Checked${amount}</span>`;
 }
 
 // ---------- mobile nav drawer ----------
@@ -538,6 +576,7 @@ function requirementCardHtml(requirement, options = {}) {
         <span class="badge">${escapeHtml(requirement.propertyType)}</span>
         <span class="badge">${escapeHtml(requirement.state)}${requirement.area ? " - " + escapeHtml(requirement.area) : ""}</span>
         <div class="price-tag">${formatPrice(requirement.budgetMin)} - ${formatPrice(requirement.budgetMax)}</div>
+        <div class="tag-row">${loanCheckedBadgeHtml(requirement)}</div>
         <div class="data-card-meta">${requirement.bedrooms ? "Min " + requirement.bedrooms + " bed" : ""}</div>
         ${requirement.notes ? `<div class="data-card-meta">${escapeHtml(requirement.notes)}</div>` : ""}
         ${agentInfo}
@@ -606,6 +645,7 @@ async function initDashboardPage(user) {
               <div class="data-card-meta">
                 Budget: ${formatPrice(m.requirement.budgetMin)} - ${formatPrice(m.requirement.budgetMax)}
               </div>
+              ${loanCheckedBadgeHtml(m.requirement) ? `<div class="tag-row">${loanCheckedBadgeHtml(m.requirement)}</div>` : ""}
               <div class="data-card-meta">
                 ${
                   counterpart.locked
@@ -881,14 +921,35 @@ async function initPostListingPage(user) {
 async function initPostRequirementPage() {
   const stateSelect = document.getElementById("state");
   const areaSelect = document.getElementById("area");
+  const budgetRangeSelect = document.getElementById("budgetRange");
+  const budgetMinInput = document.getElementById("budgetMin");
+  const budgetMaxInput = document.getElementById("budgetMax");
+  const loanCheckedInput = document.getElementById("loanChecked");
+  const loanAmountWrap = document.getElementById("loan-amount-wrap");
+  const loanAmountInput = document.getElementById("loanAmount");
+
   fillSelect(document.getElementById("propertyType"), PROPERTY_TYPES);
   fillSelect(stateSelect, MALAYSIAN_STATES);
   fillSelect(document.getElementById("tenurePreference"), TENURE_PREFERENCE_OPTIONS);
   fillSelect(document.getElementById("bumiLotPreference"), BUMI_LOT_PREFERENCE_OPTIONS);
+  fillBudgetRangeSelect(budgetRangeSelect);
 
   // Area options depend on which state is selected.
   fillAreaSelect(areaSelect, stateSelect.value);
   stateSelect.addEventListener("change", () => fillAreaSelect(areaSelect, stateSelect.value));
+
+  // Picking a fixed range fills the two hidden inputs the rest of the form
+  // (and the API) actually reads.
+  budgetRangeSelect.addEventListener("change", () => {
+    const range = BUDGET_RANGES.find((r) => r.key === budgetRangeSelect.value);
+    budgetMinInput.value = range ? range.min : "";
+    budgetMaxInput.value = range ? range.max : "";
+  });
+
+  loanCheckedInput.addEventListener("change", () => {
+    loanAmountWrap.classList.toggle("hidden", !loanCheckedInput.checked);
+    if (!loanCheckedInput.checked) loanAmountInput.value = "";
+  });
 
   const params = new URLSearchParams(window.location.search);
   const editId = params.get("id");
@@ -909,11 +970,26 @@ async function initPostRequirementPage() {
       document.getElementById("propertyType").value = requirement.propertyType || "";
       stateSelect.value = requirement.state || "";
       fillAreaSelect(areaSelect, requirement.state, requirement.area); // area options depend on state - repopulate before setting it
-      document.getElementById("budgetMin").value = requirement.budgetMin != null ? requirement.budgetMin : "";
-      document.getElementById("budgetMax").value = requirement.budgetMax != null ? requirement.budgetMax : "";
+
+      const rangeKey = findBudgetRangeKey(requirement.budgetMin, requirement.budgetMax);
+      if (rangeKey) {
+        budgetRangeSelect.value = rangeKey;
+      } else if (requirement.budgetMin != null && requirement.budgetMax != null) {
+        // Legacy free-typed budget from before fixed ranges existed - inject
+        // it as its own option so editing doesn't silently remap it.
+        const customLabel = `${formatPrice(requirement.budgetMin)} - ${formatPrice(requirement.budgetMax)} (existing)`;
+        budgetRangeSelect.appendChild(new Option(customLabel, "existing"));
+        budgetRangeSelect.value = "existing";
+      }
+      budgetMinInput.value = requirement.budgetMin != null ? requirement.budgetMin : "";
+      budgetMaxInput.value = requirement.budgetMax != null ? requirement.budgetMax : "";
+
       document.getElementById("bedrooms").value = requirement.bedrooms != null ? requirement.bedrooms : "";
       document.getElementById("tenurePreference").value = requirement.tenurePreference || "Any";
       document.getElementById("bumiLotPreference").value = requirement.bumiLotPreference || "Any";
+      loanCheckedInput.checked = Boolean(requirement.loanChecked);
+      loanAmountWrap.classList.toggle("hidden", !requirement.loanChecked);
+      loanAmountInput.value = requirement.loanAmount != null ? requirement.loanAmount : "";
       document.getElementById("notes").value = requirement.notes || "";
     } catch (err) {
       const msg = document.getElementById("requirement-message");
@@ -938,6 +1014,8 @@ async function initPostRequirementPage() {
       bedrooms: document.getElementById("bedrooms").value,
       tenurePreference: document.getElementById("tenurePreference").value,
       bumiLotPreference: document.getElementById("bumiLotPreference").value,
+      loanChecked: loanCheckedInput.checked,
+      loanAmount: loanCheckedInput.checked ? loanAmountInput.value : "",
       notes: document.getElementById("notes").value,
     };
 

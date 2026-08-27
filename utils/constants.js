@@ -38,6 +38,21 @@ const BUMI_LOT_OPTIONS = ["Bumi Lot", "Non-Bumi Lot"];
 const TENURE_PREFERENCE_OPTIONS = ["Any", "Freehold", "Leasehold"];
 const BUMI_LOT_PREFERENCE_OPTIONS = ["Any", "Bumi Lot", "Non-Bumi Lot"];
 
+// Fixed budget bands for the buyer requirement form - agents pick one of
+// these instead of typing a free min/max. Note the gap between RM650,000 and
+// RM800,000 is intentional, as specified. "Above RM1,000,000" is capped at a
+// high but finite ceiling so the matching engine's price-fit math (which
+// needs a real budgetMax) still works.
+const BUDGET_RANGES = [
+  { key: "150000-250000", min: 150000, max: 250000, label: "RM150,000 - RM250,000" },
+  { key: "251000-350000", min: 251000, max: 350000, label: "RM251,000 - RM350,000" },
+  { key: "351000-450000", min: 351000, max: 450000, label: "RM351,000 - RM450,000" },
+  { key: "451000-550000", min: 451000, max: 550000, label: "RM451,000 - RM550,000" },
+  { key: "551000-650000", min: 551000, max: 650000, label: "RM551,000 - RM650,000" },
+  { key: "800000-1000000", min: 800000, max: 1000000, label: "RM800,000 - RM1,000,000" },
+  { key: "1000001-10000000", min: 1000001, max: 10000000, label: "Above RM1,000,000" },
+];
+
 // Plan caps and pricing. Change the *_PRICE_RM values any time - they're
 // only used for display, since billing is manual for now.
 const FREE_LISTING_LIMIT = 2;
@@ -61,6 +76,7 @@ module.exports = {
   BUMI_LOT_OPTIONS,
   TENURE_PREFERENCE_OPTIONS,
   BUMI_LOT_PREFERENCE_OPTIONS,
+  BUDGET_RANGES,
   FREE_LISTING_LIMIT,
   FREE_REQUIREMENT_LIMIT,
   PRO_LISTING_LIMIT,
