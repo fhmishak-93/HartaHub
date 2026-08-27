@@ -1,15 +1,28 @@
 const mongoose = require("mongoose");
-const { MALAYSIAN_STATES, PROPERTY_TYPES } = require("../utils/constants");
+const {
+  MALAYSIAN_STATES,
+  PROPERTY_TYPES,
+  TENURE_PREFERENCE_OPTIONS,
+  BUMI_LOT_PREFERENCE_OPTIONS,
+} = require("../utils/constants");
 
 const requirementSchema = new mongoose.Schema({
   agent: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   clientLabel: { type: String, required: true, trim: true }, // e.g. "Mr. Tan - buyer"
   propertyType: { type: String, required: true, enum: PROPERTY_TYPES },
   state: { type: String, required: true, enum: MALAYSIAN_STATES },
-  area: { type: String, trim: true },
+  // Required - carries real weight (30%) in the match percentage, so a
+  // blank area would make that whole slice of the score meaningless.
+  area: { type: String, required: true, trim: true },
   budgetMin: { type: Number, required: true, min: 0 },
   budgetMax: { type: Number, required: true, min: 0 },
   bedrooms: { type: Number, min: 0 }, // minimum bedrooms wanted
+  // Optional buyer preferences - "Any" (the default) never counts against
+  // the match score. bumiLotPreference carries 10% weight in the match
+  // percentage (see utils/matching.js); tenurePreference is informational
+  // only for now - captured for the agent's own reference, not yet scored.
+  tenurePreference: { type: String, enum: TENURE_PREFERENCE_OPTIONS, default: "Any" },
+  bumiLotPreference: { type: String, enum: BUMI_LOT_PREFERENCE_OPTIONS, default: "Any" },
   notes: { type: String, trim: true },
   createdAt: { type: Date, default: Date.now },
 });

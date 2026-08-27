@@ -36,6 +36,78 @@ const MALAYSIAN_STATES = [
 
 const TENURE_OPTIONS = ["Freehold", "Leasehold"];
 const BUMI_LOT_OPTIONS = ["Bumi Lot", "Non-Bumi Lot"];
+const TENURE_PREFERENCE_OPTIONS = ["Any", "Freehold", "Leasehold"];
+const BUMI_LOT_PREFERENCE_OPTIONS = ["Any", "Bumi Lot", "Non-Bumi Lot"];
+
+// Structured area/town list, keyed by state - must stay identical to
+// utils/areas.js on the server. Drives the dependent Area dropdown on both
+// the Post Listing and Post Buyer Requirement forms, so matching.js can
+// compare areas exactly instead of guessing at free text.
+const AREAS_BY_STATE = {
+  Johor: [
+    "Johor Bahru", "Iskandar Puteri", "Nusajaya", "Skudai", "Kulai", "Pasir Gudang",
+    "Kluang", "Batu Pahat", "Muar", "Segamat", "Pontian", "Kota Tinggi", "Mersing",
+    "Tangkak", "Gelang Patah", "Ulu Tiram",
+  ],
+  Kedah: [
+    "Alor Setar", "Sungai Petani", "Kulim", "Langkawi", "Jitra", "Baling",
+    "Kuala Kedah", "Gurun", "Pendang", "Yan", "Lunas", "Sik",
+  ],
+  Kelantan: [
+    "Kota Bharu", "Pasir Mas", "Tanah Merah", "Machang", "Gua Musang", "Tumpat",
+    "Kuala Krai", "Wakaf Bharu", "Pasir Puteh",
+  ],
+  "Kuala Lumpur": [
+    "Bangsar", "Mont Kiara", "Sri Hartamas", "Damansara Heights", "KLCC", "Bukit Bintang",
+    "Cheras", "Setapak", "Wangsa Maju", "Titiwangsa", "Sentul", "Kepong", "Bukit Jalil",
+    "Sri Petaling", "Taman Desa", "Segambut", "Ampang Hilir", "Pantai", "Bandar Tun Razak",
+    "Jinjang", "OUG (Old Klang Road)",
+  ],
+  Labuan: ["Bandar Labuan", "Victoria", "Rancha-Rancha", "Patau-Patau"],
+  Melaka: [
+    "Bandar Melaka", "Ayer Keroh", "Alor Gajah", "Jasin", "Batu Berendam", "Bukit Katil",
+    "Klebang", "Tanjung Kling", "Masjid Tanah",
+  ],
+  "Negeri Sembilan": [
+    "Seremban", "Port Dickson", "Nilai", "Bahau", "Kuala Pilah", "Rembau", "Tampin", "Mantin",
+  ],
+  Pahang: [
+    "Kuantan", "Temerloh", "Bentong", "Raub", "Jerantut", "Cameron Highlands",
+    "Genting Highlands", "Mentakab", "Pekan", "Kuala Lipis",
+  ],
+  Perak: [
+    "Ipoh", "Taiping", "Sitiawan", "Teluk Intan", "Lumut", "Batu Gajah", "Kampar",
+    "Tapah", "Bidor", "Kuala Kangsar", "Manjung", "Gopeng", "Parit Buntar",
+  ],
+  Perlis: ["Kangar", "Arau", "Padang Besar", "Kuala Perlis"],
+  "Pulau Pinang": [
+    "George Town", "Bayan Lepas", "Bukit Mertajam", "Butterworth", "Sungai Ara",
+    "Tanjung Bungah", "Batu Ferringhi", "Air Itam", "Gelugor", "Simpang Ampat",
+    "Nibong Tebal", "Balik Pulau", "Jelutong", "Bayan Baru",
+  ],
+  Putrajaya: [
+    "Precinct 1", "Precinct 8", "Precinct 9", "Precinct 11", "Precinct 14",
+    "Precinct 16", "Precinct 18",
+  ],
+  Sabah: [
+    "Kota Kinabalu", "Sandakan", "Tawau", "Penampang", "Putatan", "Papar", "Kudat",
+    "Ranau", "Keningau", "Lahad Datu", "Semporna",
+  ],
+  Sarawak: [
+    "Kuching", "Miri", "Sibu", "Bintulu", "Kota Samarahan", "Sri Aman", "Limbang",
+    "Sarikei", "Mukah",
+  ],
+  Selangor: [
+    "Petaling Jaya", "Shah Alam", "Subang Jaya", "USJ", "Puchong", "Klang", "Kajang",
+    "Cheras", "Ampang", "Cyberjaya", "Bangi", "Semenyih", "Rawang", "Sungai Buloh",
+    "Damansara", "Kota Damansara", "Sepang", "Selayang", "Gombak", "Balakong",
+    "Seri Kembangan", "Kuala Selangor", "Sabak Bernam", "Banting", "Kuala Langat",
+    "Setia Alam", "Bandar Sunway",
+  ],
+  Terengganu: [
+    "Kuala Terengganu", "Kemaman", "Dungun", "Marang", "Besut", "Chukai", "Jerteh",
+  ],
+};
 
 const COMMISSION_RATE = 0.03;
 
@@ -67,6 +139,26 @@ function fillSelect(select, options) {
     el.value = opt;
     el.textContent = opt;
     select.appendChild(el);
+  }
+}
+
+// Repopulates an Area <select> from AREAS_BY_STATE for the given state,
+// keeping that select's own placeholder option (its first <option>, e.g.
+// "No specific area" or "Select area"). If selectedValue is passed and it's
+// not in that state's list - e.g. an older record's free-text area from
+// before this structured list existed - it's injected as an extra option so
+// editing the record doesn't silently drop or overwrite it.
+function fillAreaSelect(select, state, selectedValue) {
+  const placeholderText = select.options.length ? select.options[0].textContent : "Select area";
+  select.innerHTML = "";
+  select.appendChild(new Option(placeholderText, ""));
+  const options = AREAS_BY_STATE[state] || [];
+  fillSelect(select, options);
+  if (selectedValue) {
+    if (!options.includes(selectedValue)) {
+      select.appendChild(new Option(selectedValue, selectedValue));
+    }
+    select.value = selectedValue;
   }
 }
 
@@ -500,10 +592,14 @@ async function initDashboardPage(user) {
       .map((m) => {
         const isMyListing = String(m.listing.agent._id) === String(user.id);
         const counterpart = isMyListing ? m.requirement.agent : m.listing.agent;
+        const scoreTier = m.matchScore >= 80 ? "high" : m.matchScore >= 50 ? "medium" : "low";
         return `
           <div class="data-card match-card">
             <div class="data-card-body">
-              <h3>${escapeHtml(m.listing.title)} &harr; ${escapeHtml(m.requirement.clientLabel)}</h3>
+              <div class="match-header">
+                <h3>${escapeHtml(m.listing.title)} &harr; ${escapeHtml(m.requirement.clientLabel)}</h3>
+                <span class="match-score-badge match-score-${scoreTier}">${m.matchScore}% Match</span>
+              </div>
               <span class="badge">${escapeHtml(m.listing.propertyType)}</span>
               <span class="badge">${escapeHtml(m.listing.state)}</span>
               <div class="price-tag">${formatPrice(m.listing.price)}</div>
@@ -642,10 +738,16 @@ async function initBrowsePage() {
 
 async function initPostListingPage(user) {
   const propertyTypeSelect = document.getElementById("propertyType");
+  const stateSelect = document.getElementById("state");
+  const areaSelect = document.getElementById("area");
   fillSelect(propertyTypeSelect, PROPERTY_TYPES);
-  fillSelect(document.getElementById("state"), MALAYSIAN_STATES);
+  fillSelect(stateSelect, MALAYSIAN_STATES);
   fillSelect(document.getElementById("tenure"), TENURE_OPTIONS);
   fillSelect(document.getElementById("bumiLot"), BUMI_LOT_OPTIONS);
+
+  // Area options depend on which state is selected.
+  fillAreaSelect(areaSelect, stateSelect.value);
+  stateSelect.addEventListener("change", () => fillAreaSelect(areaSelect, stateSelect.value));
 
   const params = new URLSearchParams(window.location.search);
   const editId = params.get("id");
@@ -708,8 +810,8 @@ async function initPostListingPage(user) {
       const listing = await api(`/api/listings/${editId}`);
       document.getElementById("title").value = listing.title || "";
       document.getElementById("propertyType").value = listing.propertyType || "";
-      document.getElementById("state").value = listing.state || "";
-      document.getElementById("area").value = listing.area || "";
+      stateSelect.value = listing.state || "";
+      fillAreaSelect(areaSelect, listing.state, listing.area); // area options depend on state - repopulate before setting it
       document.getElementById("price").value = listing.price != null ? listing.price : "";
       document.getElementById("bedrooms").value = listing.bedrooms != null ? listing.bedrooms : "";
       document.getElementById("bathrooms").value = listing.bathrooms != null ? listing.bathrooms : "";
@@ -777,8 +879,16 @@ async function initPostListingPage(user) {
 // ---------- page: post-requirement ----------
 
 async function initPostRequirementPage() {
+  const stateSelect = document.getElementById("state");
+  const areaSelect = document.getElementById("area");
   fillSelect(document.getElementById("propertyType"), PROPERTY_TYPES);
-  fillSelect(document.getElementById("state"), MALAYSIAN_STATES);
+  fillSelect(stateSelect, MALAYSIAN_STATES);
+  fillSelect(document.getElementById("tenurePreference"), TENURE_PREFERENCE_OPTIONS);
+  fillSelect(document.getElementById("bumiLotPreference"), BUMI_LOT_PREFERENCE_OPTIONS);
+
+  // Area options depend on which state is selected.
+  fillAreaSelect(areaSelect, stateSelect.value);
+  stateSelect.addEventListener("change", () => fillAreaSelect(areaSelect, stateSelect.value));
 
   const params = new URLSearchParams(window.location.search);
   const editId = params.get("id");
@@ -797,11 +907,13 @@ async function initPostRequirementPage() {
       const requirement = await api(`/api/requirements/${editId}`);
       document.getElementById("clientLabel").value = requirement.clientLabel || "";
       document.getElementById("propertyType").value = requirement.propertyType || "";
-      document.getElementById("state").value = requirement.state || "";
-      document.getElementById("area").value = requirement.area || "";
+      stateSelect.value = requirement.state || "";
+      fillAreaSelect(areaSelect, requirement.state, requirement.area); // area options depend on state - repopulate before setting it
       document.getElementById("budgetMin").value = requirement.budgetMin != null ? requirement.budgetMin : "";
       document.getElementById("budgetMax").value = requirement.budgetMax != null ? requirement.budgetMax : "";
       document.getElementById("bedrooms").value = requirement.bedrooms != null ? requirement.bedrooms : "";
+      document.getElementById("tenurePreference").value = requirement.tenurePreference || "Any";
+      document.getElementById("bumiLotPreference").value = requirement.bumiLotPreference || "Any";
       document.getElementById("notes").value = requirement.notes || "";
     } catch (err) {
       const msg = document.getElementById("requirement-message");
@@ -824,6 +936,8 @@ async function initPostRequirementPage() {
       budgetMin: document.getElementById("budgetMin").value,
       budgetMax: document.getElementById("budgetMax").value,
       bedrooms: document.getElementById("bedrooms").value,
+      tenurePreference: document.getElementById("tenurePreference").value,
+      bumiLotPreference: document.getElementById("bumiLotPreference").value,
       notes: document.getElementById("notes").value,
     };
 

@@ -3,6 +3,7 @@ const Listing = require("../models/Listing");
 const User = require("../models/User");
 const requireAuth = require("../middleware/requireAuth");
 const { getTier, getListingLimit } = require("../utils/plan");
+const { isValidArea } = require("../utils/areas");
 
 const router = express.Router();
 
@@ -80,6 +81,12 @@ router.post("/", requireAuth, async (req, res) => {
         .status(400)
         .json({ error: "Title, property type, state, and price are required." });
     }
+    // Area is optional on a listing, but if one is given it must be a real
+    // town from that state's list - keeps matching (utils/matching.js)
+    // comparing like-for-like instead of guessing at free text.
+    if (area && !isValidArea(state, area)) {
+      return res.status(400).json({ error: "Please choose an area from the list for the selected state." });
+    }
 
     const user = await User.findById(req.session.userId);
     const tier = getTier(user);
@@ -151,6 +158,17 @@ router.patch("/:id", requireAuth, async (req, res) => {
       if (req.body[field] !== undefined && req.body[field] !== "") {
         listing[field] = req.body[field];
       }
+    }
+
+    // Only re-validate area if this request actually touched area or state -
+    // otherwise an older listing predating the structured area list would
+    // get stuck unable to save any other edit until its area is fixed.
+    if (
+      (req.body.area !== undefined || req.body.state !== undefined) &&
+      listing.area &&
+      !isValidArea(listing.state, listing.area)
+    ) {
+      return res.status(400).json({ error: "Please choose an area from the list for the selected state." });
     }
 
     await listing.save();

@@ -33,6 +33,11 @@ const PROPERTY_TYPES = [
 const TENURE_OPTIONS = ["Freehold", "Leasehold"];
 const BUMI_LOT_OPTIONS = ["Bumi Lot", "Non-Bumi Lot"];
 
+// Buyer-requirement preference versions - same values plus "Any", since a
+// buyer (unlike a listing) can be indifferent about tenure/lot status.
+const TENURE_PREFERENCE_OPTIONS = ["Any", "Freehold", "Leasehold"];
+const BUMI_LOT_PREFERENCE_OPTIONS = ["Any", "Bumi Lot", "Non-Bumi Lot"];
+
 // Plan caps and pricing. Change the *_PRICE_RM values any time - they're
 // only used for display, since billing is manual for now.
 const FREE_LISTING_LIMIT = 2;
@@ -54,6 +59,8 @@ module.exports = {
   PROPERTY_TYPES,
   TENURE_OPTIONS,
   BUMI_LOT_OPTIONS,
+  TENURE_PREFERENCE_OPTIONS,
+  BUMI_LOT_PREFERENCE_OPTIONS,
   FREE_LISTING_LIMIT,
   FREE_REQUIREMENT_LIMIT,
   PRO_LISTING_LIMIT,

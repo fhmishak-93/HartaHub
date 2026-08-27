@@ -3,6 +3,7 @@ const Requirement = require("../models/Requirement");
 const User = require("../models/User");
 const requireAuth = require("../middleware/requireAuth");
 const { getTier, getRequirementLimit } = require("../utils/plan");
+const { isValidArea } = require("../utils/areas");
 
 const router = express.Router();
 
@@ -37,16 +38,29 @@ router.get("/:id", requireAuth, async (req, res) => {
 // POST /api/requirements - create a new buyer requirement
 router.post("/", requireAuth, async (req, res) => {
   try {
-    const { clientLabel, propertyType, state, area, budgetMin, budgetMax, bedrooms, notes } =
-      req.body;
+    const {
+      clientLabel,
+      propertyType,
+      state,
+      area,
+      budgetMin,
+      budgetMax,
+      bedrooms,
+      tenurePreference,
+      bumiLotPreference,
+      notes,
+    } = req.body;
 
-    if (!clientLabel || !propertyType || !state || !budgetMin || !budgetMax) {
+    if (!clientLabel || !propertyType || !state || !area || !budgetMin || !budgetMax) {
       return res.status(400).json({
-        error: "Client label, property type, state, and budget range are required.",
+        error: "Client label, property type, state, preferred area, and budget range are required.",
       });
     }
     if (Number(budgetMin) > Number(budgetMax)) {
       return res.status(400).json({ error: "Minimum budget cannot be more than maximum budget." });
+    }
+    if (!isValidArea(state, area)) {
+      return res.status(400).json({ error: "Please choose a preferred area from the list for the selected state." });
     }
 
     const user = await User.findById(req.session.userId);
@@ -70,6 +84,8 @@ router.post("/", requireAuth, async (req, res) => {
       budgetMin,
       budgetMax,
       bedrooms: bedrooms || undefined,
+      tenurePreference: tenurePreference || undefined,
+      bumiLotPreference: bumiLotPreference || undefined,
       notes,
     });
 
@@ -97,11 +113,29 @@ router.patch("/:id", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Minimum budget cannot be more than maximum budget." });
     }
 
-    const editable = ["clientLabel", "propertyType", "state", "area", "budgetMin", "budgetMax", "bedrooms", "notes"];
+    const editable = [
+      "clientLabel",
+      "propertyType",
+      "state",
+      "area",
+      "budgetMin",
+      "budgetMax",
+      "bedrooms",
+      "tenurePreference",
+      "bumiLotPreference",
+      "notes",
+    ];
     for (const field of editable) {
       if (req.body[field] !== undefined && req.body[field] !== "") {
         requirement[field] = req.body[field];
       }
+    }
+
+    // Only re-validate area if this request actually touched area or state -
+    // otherwise an older requirement predating the structured area list
+    // would get stuck unable to save any other edit until its area is fixed.
+    if ((req.body.area !== undefined || req.body.state !== undefined) && !isValidArea(requirement.state, requirement.area)) {
+      return res.status(400).json({ error: "Please choose a preferred area from the list for the selected state." });
     }
 
     await requirement.save();

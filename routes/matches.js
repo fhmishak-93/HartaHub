@@ -53,16 +53,14 @@ router.get("/", requireAuth, async (req, res) => {
       (m) => String(m.listing.agent._id) === myUserId || String(m.requirement.agent._id) === myUserId
     );
 
-    // Sort newest first for a more useful dashboard.
-    myMatches.sort(
-      (a, b) =>
-        new Date(b.requirement.createdAt) - new Date(a.requirement.createdAt)
-    );
+    // computeMatches() already sorted these best-match-first; filter() above
+    // preserves that order, so the best matches surface first on the dashboard.
 
     // Convert to plain objects so we can safely null out fields below.
     myMatches = myMatches.map((m) => ({
       listing: m.listing.toObject(),
       requirement: m.requirement.toObject(),
+      matchScore: m.matchScore,
     }));
 
     if (!canSeeContactDetails(getTier(me))) {

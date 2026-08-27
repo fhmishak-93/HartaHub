@@ -46,8 +46,10 @@
         </div>
       </div>
 
-      <label for="area">Preferred Area (optional)</label>
-      <input type="text" id="area" placeholder="e.g. Petaling Jaya" />
+      <label for="area">Preferred Area</label>
+      <select id="area" required>
+        <option value="">Select area</option>
+      </select>
 
       <div class="form-row">
         <div>
@@ -62,6 +64,18 @@
 
       <label for="bedrooms">Minimum Bedrooms (optional)</label>
       <input type="number" id="bedrooms" min="0" />
+
+      <div class="form-row">
+        <div>
+          <label for="tenurePreference">Tenure Preference (optional)</label>
+          <select id="tenurePreference"></select>
+        </div>
+        <div>
+          <label for="bumiLotPreference">Lot Status Preference (optional)</label>
+          <select id="bumiLotPreference"></select>
+        </div>
+      </div>
+      <p class="hint">Leave as "Any" if your client has no preference - it won't affect their match percentage.</p>
 
       <label for="notes">Notes (optional)</label>
       <textarea id="notes" rows="4" placeholder="Anything else that helps match the right property"></textarea>

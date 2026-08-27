@@ -9,7 +9,7 @@ This guide assumes **zero prior technical experience**. Follow it top to bottom.
 - `server.js` - starts the app
 - `models/` - what a User, Listing, and Requirement look like in the database
 - `routes/` - the API endpoints the frontend calls (login, listings, requirements, matches)
-- `utils/matching.js` - the matching logic (compares property type, state, and budget)
+- `utils/matching.js` - the matching logic (hard filters on property type/state/budget/bedrooms, then a 0-100% score based on budget fit, bedrooms, area, tenure, and lot status)
 - `public/` - the actual web pages (HTML/CSS/JS) people see in their browser
 
 ## Part 1 - Run it on your own computer (optional but recommended first)
