@@ -2,26 +2,29 @@
 //
 // Two layers:
 //
-// 1. HARD FILTERS (isMatch) - property type and state are absolute
-//    requirements, not a matter of degree. A buyer looking for a
-//    Terrace/Link House in Selangor has no practical use for the same
-//    property type in Johor no matter how well price/area line up - nobody
-//    is co-broking a client across state lines - so there's no meaningful
-//    "80% match" for a different state, same as there isn't for a
-//    different property type.
+// 1. HARD FILTERS (isMatch) - absolute requirements, not a matter of degree:
+//      - Property type must match. A buyer looking for a Terrace/Link House
+//        has no practical use for a bungalow listing no matter how well
+//        everything else lines up.
+//      - State must match. Co-broking is local - a Selangor buyer can't use
+//        a Johor listing no matter how good the price is.
+//      - Listing price must not exceed the buyer's maximum budget. A buyer
+//        literally cannot buy a property priced above what they can afford,
+//        so this can never be "a lower score" - it's a hard no regardless of
+//        how well area/bedrooms/lot status line up.
 //
-// 2. PERCENTAGE SCORE (computeMatchScore) - everything else is weighted and
-//    scored 0-100 rather than hard-gated, so a listing slightly over budget
-//    or a bit short on bedrooms still surfaces (just ranked lower) instead
-//    of disappearing entirely.
+// 2. PERCENTAGE SCORE (computeMatchScore) - everything else (plus how well
+//    the price fits within budget) is weighted and scored 0-100 rather than
+//    hard-gated, so e.g. a listing a bit short on bedrooms still surfaces
+//    (just ranked lower) instead of disappearing entirely.
 //
-//      Price            40%
+//      Price            40%  (already guaranteed <= budget by isMatch above)
 //      Preferred area   40%  (mandatory on the requirement - see models/Requirement.js)
 //      Minimum bedrooms 10%
 //      Lot status       10%
 //
 // Matches below MIN_MATCH_SCORE are dropped entirely, so a technically-passed
-// pair with a terrible price/area/bedroom fit doesn't clutter the dashboard.
+// pair with a terrible area/bedroom fit doesn't clutter the dashboard.
 //
 // Still plain rule-based scoring - no AI/ML involved, which keeps it fast,
 // predictable, and easy to explain to an agent ("why is this 62%?").
@@ -36,26 +39,31 @@ const SCORE_WEIGHTS = {
 const MIN_MATCH_SCORE = 30;
 
 function isMatch(listing, requirement) {
-  return listing.propertyType === requirement.propertyType && listing.state === requirement.state;
+  return (
+    listing.propertyType === requirement.propertyType &&
+    listing.state === requirement.state &&
+    Number(listing.price) <= requirement.budgetMax
+  );
 }
 
-// Inside budget: 60-100, scored by how close to the midpoint (more room to
-// negotiate). Outside budget: decays from 60 down to 0 the further off it
-// is, so a listing 5-10% over budget can still show up, just lower-ranked.
+// isMatch() already guarantees price <= budgetMax, so this only ever scores
+// two cases: comfortably inside the range (60-100, best at the midpoint - more
+// room to negotiate), or below budgetMin (still affordable, but decays the
+// cheaper it gets relative to what the buyer expected to pay - a price far
+// below budget often means a very different property than what they had in mind).
 function scorePriceFit(listing, requirement) {
   const { budgetMin, budgetMax } = requirement;
   const price = Number(listing.price);
 
-  if (price >= budgetMin && price <= budgetMax) {
+  if (price >= budgetMin) {
     const mid = (budgetMin + budgetMax) / 2;
     const halfRange = (budgetMax - budgetMin) / 2 || 1;
     const closeness = 1 - Math.abs(price - mid) / halfRange;
     return 60 + closeness * 40;
   }
 
-  const edge = price < budgetMin ? budgetMin : budgetMax;
-  const overshoot = Math.abs(price - edge) / edge; // relative distance past the edge
-  return Math.max(0, Math.round(60 - overshoot * 200)); // ~30% past the edge = 0
+  const shortfall = (budgetMin - price) / budgetMin; // relative distance below the minimum
+  return Math.max(0, Math.round(60 - shortfall * 200)); // ~30% under = 0
 }
 
 // Preferred area is mandatory going forward, but older requirements posted
