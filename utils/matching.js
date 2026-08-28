@@ -2,7 +2,11 @@
 //
 // Two layers:
 //
-// 1. HARD FILTERS (isMatch) - absolute requirements, not a matter of degree:
+// 1. HARD FILTERS (isMatch) - absolute requirements, not a matter of degree.
+//    Price and Area are deliberately on this list, not just weighted: a
+//    listing must genuinely fit the buyer's price and location before it
+//    counts as a match at all - a good bedroom count or lot status can never
+//    make up for the wrong price or the wrong area.
 //      - Property type must match. A buyer looking for a Terrace/Link House
 //        has no practical use for a bungalow listing no matter how well
 //        everything else lines up.
@@ -12,19 +16,26 @@
 //        literally cannot buy a property priced above what they can afford,
 //        so this can never be "a lower score" - it's a hard no regardless of
 //        how well area/bedrooms/lot status line up.
+//      - Listing area must match the buyer's preferred area exactly (both
+//        sides are now picked from the same structured town list - see
+//        utils/areas.js - so an exact, case-insensitive comparison is
+//        reliable). A listing with no area set, or in a different town,
+//        never counts as a match no matter how well price/bedrooms/lot
+//        status line up.
 //
-// 2. PERCENTAGE SCORE (computeMatchScore) - everything else (plus how well
-//    the price fits within budget) is weighted and scored 0-100 rather than
-//    hard-gated, so e.g. a listing a bit short on bedrooms still surfaces
-//    (just ranked lower) instead of disappearing entirely.
+// 2. PERCENTAGE SCORE (computeMatchScore) - among pairs that already passed
+//    every hard filter above, price closeness/bedrooms/lot status are
+//    weighted and scored 0-100 to rank the better fits higher. Area no
+//    longer varies here (isMatch already guarantees it's exact), so its
+//    slice of the score is effectively a constant for every surviving match.
 //
-//      Price            40%  (already guaranteed <= budget by isMatch above)
-//      Preferred area   40%  (mandatory on the requirement - see models/Requirement.js)
+//      Price            40%  (closeness within budget - already guaranteed in-range on the high side)
+//      Preferred area   40%  (already guaranteed exact by isMatch above)
 //      Minimum bedrooms 10%
 //      Lot status       10%
 //
 // Matches below MIN_MATCH_SCORE are dropped entirely, so a technically-passed
-// pair with a terrible area/bedroom fit doesn't clutter the dashboard.
+// pair with a terrible price/bedroom fit doesn't clutter the dashboard.
 //
 // On top of the weighted score, a requirement whose buyer has a loan
 // eligibility check on file gets a flat LOAN_CHECKED_BONUS added (capped at
@@ -44,11 +55,19 @@ const SCORE_WEIGHTS = {
 const MIN_MATCH_SCORE = 30;
 const LOAN_CHECKED_BONUS = 5;
 
+function areasMatch(listing, requirement) {
+  const reqArea = (requirement.area || "").trim().toLowerCase();
+  const listArea = (listing.area || "").trim().toLowerCase();
+  if (!reqArea || !listArea) return false; // area is mandatory on the requirement; a listing with no area can't be confirmed
+  return reqArea === listArea;
+}
+
 function isMatch(listing, requirement) {
   return (
     listing.propertyType === requirement.propertyType &&
     listing.state === requirement.state &&
-    Number(listing.price) <= requirement.budgetMax
+    Number(listing.price) <= requirement.budgetMax &&
+    areasMatch(listing, requirement)
   );
 }
 
@@ -72,17 +91,12 @@ function scorePriceFit(listing, requirement) {
   return Math.max(0, Math.round(60 - shortfall * 200)); // ~30% under = 0
 }
 
-// Preferred area is mandatory going forward, but older requirements posted
-// before that requirement existed may still have it blank - fall back to a
-// neutral score rather than crashing or unfairly zeroing them out.
+// isMatch() already requires an exact area match, so in practice this always
+// returns 100 for any pair reaching computeMatchScore. Kept as its own
+// function (rather than a hardcoded 100 in computeMatchScore) so the area
+// slice stays self-documenting and safe if isMatch's rules ever change.
 function scoreAreaFit(listing, requirement) {
-  const reqArea = (requirement.area || "").trim().toLowerCase();
-  if (!reqArea) return 100;
-  const listArea = (listing.area || "").trim().toLowerCase();
-  if (!listArea) return 50; // buyer wants a specific area, listing didn't say
-  if (listArea === reqArea) return 100;
-  if (listArea.includes(reqArea) || reqArea.includes(listArea)) return 85; // e.g. "Kulim" vs "Lunas/Kulim"
-  return 15; // different area entirely
+  return areasMatch(listing, requirement) ? 100 : 0;
 }
 
 // Meets-or-exceeds the minimum = strong score, tapering off the more the
@@ -144,4 +158,4 @@ function computeMatches(listings, requirements) {
   return matches;
 }
 
-module.exports = { isMatch, computeMatchScore, computeMatches, MIN_MATCH_SCORE, LOAN_CHECKED_BONUS };
+module.exports = { isMatch, computeMatchScore, computeMatches, MIN_MATCH_SCORE, LOAN_CHECKED_BONUS, areasMatch };
