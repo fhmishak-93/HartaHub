@@ -6,7 +6,9 @@ const listingSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
   propertyType: { type: String, required: true, enum: PROPERTY_TYPES },
   state: { type: String, required: true, enum: MALAYSIAN_STATES },
-  area: { type: String, trim: true }, // e.g. "Mont Kiara", free text
+  // Required - matching (utils/matching.js) hard-gates on an exact area
+  // match, so a listing without one could never match any buyer requirement.
+  area: { type: String, required: true, trim: true },
   price: { type: Number, required: true, min: 0 },
   // Set once at creation and never changed again - lets us show "price
   // reduced by RM X" if the agent later lowers the asking price.

@@ -76,15 +76,15 @@ router.post("/", requireAuth, async (req, res) => {
       photoUrl,
     } = req.body;
 
-    if (!title || !propertyType || !state || !price) {
+    if (!title || !propertyType || !state || !area || !price) {
       return res
         .status(400)
-        .json({ error: "Title, property type, state, and price are required." });
+        .json({ error: "Title, property type, state, area, and price are required." });
     }
-    // Area is optional on a listing, but if one is given it must be a real
-    // town from that state's list - keeps matching (utils/matching.js)
-    // comparing like-for-like instead of guessing at free text.
-    if (area && !isValidArea(state, area)) {
+    // Must be a real town from that state's list - keeps matching
+    // (utils/matching.js) comparing like-for-like instead of guessing at
+    // free text, and lets a listing actually be found by area matching.
+    if (!isValidArea(state, area)) {
       return res.status(400).json({ error: "Please choose an area from the list for the selected state." });
     }
 
