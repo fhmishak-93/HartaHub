@@ -979,23 +979,26 @@ textarea::placeholder {
 .mock-card {
   background: var(--white);
   border-radius: 12px;
-  padding: 16px 18px;
+  padding: 14px 16px;
   box-shadow: var(--shadow-lg);
-  width: 240px;
+  width: 210px;
   position: absolute;
   z-index: 2;
   animation: mock-float 6s ease-in-out infinite;
 }
 
+/* Cards sit in opposite corners so the photo stays visible through the
+   middle, instead of a big white square blocking the house. */
 .mock-card-listing {
-  top: 10px;
-  left: 10px;
+  top: 20px;
+  left: 20px;
   transform: rotate(-4deg);
 }
 
 .mock-card-buyer {
-  top: 150px;
-  left: 140px;
+  bottom: 20px;
+  right: 20px;
+  left: auto;
   transform: rotate(3deg);
   animation-delay: -3s;
 }
@@ -1027,8 +1030,8 @@ textarea::placeholder {
 
 .mock-connector {
   position: absolute;
-  top: 105px;
-  left: 100px;
+  top: 20px;
+  right: 20px;
   background: var(--gold);
   color: var(--navy-dark);
   font-family: var(--font-display);
