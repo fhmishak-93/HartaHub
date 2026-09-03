@@ -12,9 +12,10 @@ const userSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   phone: { type: String, trim: true },
   // "pro" = 10 listings + 10 requirements, full contact details on matches.
-  // "premium" = unlimited listings/requirements, photo upload, full contact.
-  // Upgrades are granted manually for now (see README "Manually upgrading
-  // an agent") - no payment gateway is wired up yet.
+  // "premium" = unlimited listings/requirements, photo upload, full contact,
+  // priority match ranking (see utils/matching.js PREMIUM_PRIORITY_BONUS).
+  // Upgrades are granted manually for now - see README "Manually upgrading
+  // an agent" (a bcl.my-based payment integration is in progress).
   plan: { type: String, enum: ["free", "pro", "premium"], default: "free" },
   planExpiresAt: { type: Date }, // optional - set this if you sell fixed terms
   // Registered Estate Negotiator number. Agents enter this at signup;

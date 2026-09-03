@@ -37,10 +37,16 @@
 // Matches below MIN_MATCH_SCORE are dropped entirely, so a technically-passed
 // pair with a terrible price/bedroom fit doesn't clutter the dashboard.
 //
-// On top of the weighted score, a requirement whose buyer has a loan
-// eligibility check on file gets a flat LOAN_CHECKED_BONUS added (capped at
-// 100) - a pre-checked buyer is a more serious, ready-to-close lead, so they
-// get priority in the ranking without needing their own weighted slice.
+// On top of the weighted score, two flat bonuses can apply (each capped so
+// the total never exceeds 100):
+//   - LOAN_CHECKED_BONUS: the requirement's buyer has a loan eligibility
+//     check on file - a pre-checked buyer is a more serious, ready-to-close
+//     lead, so they get priority without needing their own weighted slice.
+//   - PREMIUM_PRIORITY_BONUS: a Premium perk (see utils/plan.js). Applied
+//     once for each side of the match (listing agent, requirement agent)
+//     that's on the Premium plan, so a Premium agent's listings and buyer
+//     requirements both rank higher across the board - if both agents in a
+//     match are Premium, the bonus stacks.
 //
 // Still plain rule-based scoring - no AI/ML involved, which keeps it fast,
 // predictable, and easy to explain to an agent ("why is this 62%?").
@@ -54,6 +60,7 @@ const SCORE_WEIGHTS = {
 
 const MIN_MATCH_SCORE = 30;
 const LOAN_CHECKED_BONUS = 5;
+const PREMIUM_PRIORITY_BONUS = 5;
 
 function areasMatch(listing, requirement) {
   const reqArea = (requirement.area || "").trim().toLowerCase();
@@ -135,9 +142,15 @@ function computeMatchScore(listing, requirement) {
   }
   let score = Math.round(total / 100);
   if (requirement.loanChecked) {
-    score = Math.min(100, score + LOAN_CHECKED_BONUS);
+    score += LOAN_CHECKED_BONUS;
   }
-  return score;
+  if (listing.agent && listing.agent.plan === "premium") {
+    score += PREMIUM_PRIORITY_BONUS;
+  }
+  if (requirement.agent && requirement.agent.plan === "premium") {
+    score += PREMIUM_PRIORITY_BONUS;
+  }
+  return Math.min(100, score);
 }
 
 // Given all listings and all requirements, return every matching pair
@@ -158,4 +171,12 @@ function computeMatches(listings, requirements) {
   return matches;
 }
 
-module.exports = { isMatch, computeMatchScore, computeMatches, MIN_MATCH_SCORE, LOAN_CHECKED_BONUS, areasMatch };
+module.exports = {
+  isMatch,
+  computeMatchScore,
+  computeMatches,
+  MIN_MATCH_SCORE,
+  LOAN_CHECKED_BONUS,
+  PREMIUM_PRIORITY_BONUS,
+  areasMatch,
+};

@@ -35,8 +35,10 @@ function maskContact(match, myUserId) {
 router.get("/", requireAuth, async (req, res) => {
   try {
     const [listingsRaw, requirementsRaw, me] = await Promise.all([
-      Listing.find().populate("agent", "name email phone renVerified"),
-      Requirement.find().populate("agent", "name email phone renVerified"),
+      // "plan" is needed here (not just for display) so computeMatchScore
+      // can apply the Premium priority bonus - see utils/matching.js.
+      Listing.find().populate("agent", "name email phone renVerified plan"),
+      Requirement.find().populate("agent", "name email phone renVerified plan"),
       User.findById(req.session.userId),
     ]);
 
