@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
-const { MALAYSIAN_STATES, PROPERTY_TYPES, TENURE_OPTIONS, BUMI_LOT_OPTIONS } = require("../utils/constants");
+const {
+  MALAYSIAN_STATES,
+  PROPERTY_TYPES,
+  TENURE_OPTIONS,
+  BUMI_LOT_OPTIONS,
+  LAND_SIZE_UNITS,
+} = require("../utils/constants");
 
 const listingSchema = new mongoose.Schema({
   agent: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -16,6 +22,10 @@ const listingSchema = new mongoose.Schema({
   bedrooms: { type: Number, min: 0 },
   bathrooms: { type: Number, min: 0 },
   sizeSqft: { type: Number, min: 0 },
+  // Land-specific size, in place of sizeSqft - set only when
+  // propertyType is "Land" (see routes/listings.js).
+  landSize: { type: Number, min: 0 },
+  landSizeUnit: { type: String, enum: LAND_SIZE_UNITS },
   tenure: { type: String, enum: TENURE_OPTIONS },
   bumiLot: { type: String, enum: BUMI_LOT_OPTIONS },
   // Condo/apartment-specific - left unset for other property types.

@@ -15,6 +15,8 @@ const PROPERTY_TYPES = [
   "Land",
 ];
 
+const LAND_SIZE_UNITS = ["Ekar", "Relung"];
+
 const MALAYSIAN_STATES = [
   "Johor",
   "Kedah",
@@ -502,6 +504,9 @@ function listingCardHtml(listing, options = {}) {
   if (listing.bumiLot) {
     tags.push(`<span class="info-tag">${escapeHtml(listing.bumiLot)}</span>`);
   }
+  if (listing.landSize) {
+    tags.push(`<span class="info-tag">${listing.landSize} ${escapeHtml(listing.landSizeUnit || "")}</span>`);
+  }
   if (listing.status === "closed") {
     tags.push(`<span class="info-tag info-tag-closed">Closed</span>`);
   }
@@ -791,6 +796,7 @@ async function initPostListingPage(user) {
   fillSelect(stateSelect, MALAYSIAN_STATES);
   fillSelect(document.getElementById("tenure"), TENURE_OPTIONS);
   fillSelect(document.getElementById("bumiLot"), BUMI_LOT_OPTIONS);
+  fillSelect(document.getElementById("landSizeUnit"), LAND_SIZE_UNITS);
 
   // Area options depend on which state is selected.
   fillAreaSelect(areaSelect, stateSelect.value);
@@ -817,6 +823,17 @@ async function initPostListingPage(user) {
   }
   propertyTypeSelect.addEventListener("change", toggleCondoFields);
   toggleCondoFields();
+
+  // Land listings measure size in ekar/relung, not bedrooms/bathrooms/sq ft.
+  const residentialFieldsWrap = document.getElementById("residential-fields-wrap");
+  const landFieldsWrap = document.getElementById("land-fields-wrap");
+  function toggleLandFields() {
+    const isLand = propertyTypeSelect.value === "Land";
+    residentialFieldsWrap.classList.toggle("hidden", isLand);
+    landFieldsWrap.classList.toggle("hidden", !isLand);
+  }
+  propertyTypeSelect.addEventListener("change", toggleLandFields);
+  toggleLandFields();
 
   // Uploading a real photo (vs. pasting a link) is a Pro & Premium feature.
   const canUpload = canUploadPhotoClient(user.plan);
@@ -863,11 +880,14 @@ async function initPostListingPage(user) {
       document.getElementById("bedrooms").value = listing.bedrooms != null ? listing.bedrooms : "";
       document.getElementById("bathrooms").value = listing.bathrooms != null ? listing.bathrooms : "";
       document.getElementById("sizeSqft").value = listing.sizeSqft != null ? listing.sizeSqft : "";
+      document.getElementById("landSize").value = listing.landSize != null ? listing.landSize : "";
+      document.getElementById("landSizeUnit").value = listing.landSizeUnit || "";
       document.getElementById("tenure").value = listing.tenure || "";
       document.getElementById("bumiLot").value = listing.bumiLot || "";
       document.getElementById("maintenanceFee").value = listing.maintenanceFee != null ? listing.maintenanceFee : "";
       document.getElementById("floorLevel").value = listing.floorLevel || "";
       toggleCondoFields();
+      toggleLandFields();
       photoUrlInput.value = listing.photoUrl || "";
       document.getElementById("description").value = listing.description || "";
       document.getElementById("status").value = listing.status || "active";
@@ -901,6 +921,10 @@ async function initPostListingPage(user) {
     if (propertyTypeSelect.value === "Condominium/Apartment") {
       payload.maintenanceFee = document.getElementById("maintenanceFee").value;
       payload.floorLevel = document.getElementById("floorLevel").value;
+    }
+    if (propertyTypeSelect.value === "Land") {
+      payload.landSize = document.getElementById("landSize").value;
+      payload.landSizeUnit = document.getElementById("landSizeUnit").value;
     }
     if (isEdit) {
       payload.status = document.getElementById("status").value;

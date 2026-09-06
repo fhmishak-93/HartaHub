@@ -51,7 +51,7 @@
       <label for="price">Price (RM)</label>
       <input type="number" id="price" required min="0" placeholder="e.g. 650000" />
 
-      <div class="form-row form-row-3">
+      <div id="residential-fields-wrap" class="form-row form-row-3">
         <div>
           <label for="bedrooms">Bedrooms</label>
           <input type="number" id="bedrooms" min="0" />
@@ -63,6 +63,19 @@
         <div>
           <label for="sizeSqft">Size (sq ft)</label>
           <input type="number" id="sizeSqft" min="0" />
+        </div>
+      </div>
+
+      <div id="land-fields-wrap" class="form-row hidden">
+        <div>
+          <label for="landSize">Keluasan (Land Size)</label>
+          <input type="number" id="landSize" min="0" step="any" placeholder="e.g. 2.5" />
+        </div>
+        <div>
+          <label for="landSizeUnit">Unit</label>
+          <select id="landSizeUnit">
+            <option value="">Select unit</option>
+          </select>
         </div>
       </div>
 

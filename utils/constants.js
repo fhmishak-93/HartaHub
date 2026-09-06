@@ -33,6 +33,10 @@ const PROPERTY_TYPES = [
 const TENURE_OPTIONS = ["Freehold", "Leasehold"];
 const BUMI_LOT_OPTIONS = ["Bumi Lot", "Non-Bumi Lot"];
 
+// Land size unit for "Land" listings - Malaysian agents measure land in
+// acres (ekar) or relung, not sq ft.
+const LAND_SIZE_UNITS = ["Ekar", "Relung"];
+
 // Buyer-requirement preference versions - same values plus "Any", since a
 // buyer (unlike a listing) can be indifferent about tenure/lot status.
 const TENURE_PREFERENCE_OPTIONS = ["Any", "Freehold", "Leasehold"];
@@ -74,6 +78,7 @@ module.exports = {
   PROPERTY_TYPES,
   TENURE_OPTIONS,
   BUMI_LOT_OPTIONS,
+  LAND_SIZE_UNITS,
   TENURE_PREFERENCE_OPTIONS,
   BUMI_LOT_PREFERENCE_OPTIONS,
   BUDGET_RANGES,
