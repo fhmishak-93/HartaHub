@@ -42,6 +42,9 @@ const AREAS_BY_STATE = {
     "Yan",
     "Lunas",
     "Sik",
+    "Mergong",
+    "Sungai Kob",
+    "Padang Serai",
   ],
   Kelantan: [
     "Kota Bharu",
@@ -142,6 +145,7 @@ const AREAS_BY_STATE = {
     "Balik Pulau",
     "Jelutong",
     "Bayan Baru",
+    "Tasek Gelugor",
   ],
   Putrajaya: [
     "Precinct 1",

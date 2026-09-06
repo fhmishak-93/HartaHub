@@ -65,6 +65,7 @@ const AREAS_BY_STATE = {
   Kedah: [
     "Alor Setar", "Sungai Petani", "Kulim", "Langkawi", "Jitra", "Baling",
     "Kuala Kedah", "Gurun", "Pendang", "Yan", "Lunas", "Sik",
+    "Mergong", "Sungai Kob", "Padang Serai",
   ],
   Kelantan: [
     "Kota Bharu", "Pasir Mas", "Tanah Merah", "Machang", "Gua Musang", "Tumpat",
@@ -96,7 +97,7 @@ const AREAS_BY_STATE = {
   "Pulau Pinang": [
     "George Town", "Bayan Lepas", "Bukit Mertajam", "Butterworth", "Sungai Ara",
     "Tanjung Bungah", "Batu Ferringhi", "Air Itam", "Gelugor", "Simpang Ampat",
-    "Nibong Tebal", "Balik Pulau", "Jelutong", "Bayan Baru",
+    "Nibong Tebal", "Balik Pulau", "Jelutong", "Bayan Baru", "Tasek Gelugor",
   ],
   Putrajaya: [
     "Precinct 1", "Precinct 8", "Precinct 9", "Precinct 11", "Precinct 14",
