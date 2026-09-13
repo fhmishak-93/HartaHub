@@ -14,10 +14,14 @@ const userSchema = new mongoose.Schema({
   // "pro" = 10 listings + 10 requirements, full contact details on matches.
   // "premium" = unlimited listings/requirements, photo upload, full contact,
   // priority match ranking (see utils/matching.js PREMIUM_PRIORITY_BONUS).
-  // Upgrades are granted manually for now - see README "Manually upgrading
-  // an agent" (a bcl.my-based payment integration is in progress).
+  // Upgraded via bcl.my payment links (see routes/billing.js) - 30 days per
+  // payment, renewed by paying again before planExpiresAt lapses.
   plan: { type: String, enum: ["free", "pro", "premium"], default: "free" },
   planExpiresAt: { type: Date }, // optional - set this if you sell fixed terms
+  // The last bcl.my order_number that successfully upgraded this account -
+  // makes applying an upgrade idempotent (a webhook can retry, and the
+  // success-redirect page can also trigger a verify for the same order).
+  lastBillingOrderNumber: { type: String },
   // Registered Estate Negotiator number. Agents enter this at signup;
   // the site owner manually verifies it and flips renVerified to show
   // a gold tick next to their name (see README).

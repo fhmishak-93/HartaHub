@@ -27,6 +27,13 @@
   <main id="main" class="container page page-narrow">
     <h1>Upgrade Your Plan</h1>
     <p class="page-subtitle" id="current-plan-message">Checking your current plan...</p>
+    <p class="form-message" id="upgrade-message"></p>
+
+    <div id="phone-gate" class="auth-card hidden" style="max-width: 420px; margin: 0 0 28px;">
+      <label for="upgrade-phone">Phone number (needed once, for payment)</label>
+      <input type="tel" id="upgrade-phone" placeholder="01X-XXXXXXX" />
+      <p class="hint">bcl.my requires a phone number to process payment. We'll save it to your account.</p>
+    </div>
 
     <div class="pricing-grid">
       <div class="pricing-card">
@@ -50,6 +57,7 @@
           <li>Upload a real photo instead of a link</li>
           <li>Priority support</li>
         </ul>
+        <button type="button" class="btn btn-primary" data-upgrade-plan="pro">Upgrade to Pro</button>
       </div>
 
       <div class="pricing-card pricing-card-premium">
@@ -63,35 +71,15 @@
           <li>WhatsApp match alerts <span class="coming-soon-badge">Coming Soon</span></li>
           <li>Mobile app access <span class="coming-soon-badge">Coming Soon</span></li>
         </ul>
+        <button type="button" class="btn btn-primary" data-upgrade-plan="premium">Upgrade to Premium</button>
       </div>
     </div>
 
-    <div class="upgrade-instructions">
-      <h2>How to upgrade</h2>
-      <p>
-        Upgrades are activated manually for now - no card details needed.
-        Just send payment and a quick message, and your account will be
-        upgraded within 24 hours.
-      </p>
-      <ol>
-        <li>
-          Transfer RM 19 (Pro) or RM 97 (Premium) via DuitNow to:
-          <strong>[ADD YOUR PHONE NUMBER OR BANK ACCOUNT HERE]</strong>
-        </li>
-        <li>
-          Send proof of payment on WhatsApp to
-          <a href="https://wa.me/60000000000" target="_blank" rel="noopener">
-            [ADD YOUR WHATSAPP NUMBER HERE]
-          </a>, along with the email address you signed up with and which plan you want.
-        </li>
-        <li>We'll upgrade your account and confirm by WhatsApp.</li>
-      </ol>
-      <p class="hint">
-        Site owner note: replace the placeholders above in
-        <code>public/upgrade.html</code> with your real DuitNow/bank details
-        and WhatsApp number.
-      </p>
-    </div>
+    <p class="hint" style="margin-top: 20px;">
+      Payment is handled securely by bcl.my. Plans run 30 days per payment -
+      pay again any time before it lapses to keep your plan active with no
+      lost days.
+    </p>
   </main>
 
   <script src="script.js"></script>

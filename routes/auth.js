@@ -78,7 +78,7 @@ router.get("/me", async (req, res) => {
     return res.status(401).json({ error: "Not logged in." });
   }
   const user = await User.findById(req.session.userId).select(
-    "name email plan planExpiresAt renVerified renNumber"
+    "name email phone plan planExpiresAt renVerified renNumber"
   );
   if (!user) {
     return res.status(401).json({ error: "Not logged in." });
@@ -90,13 +90,30 @@ router.get("/me", async (req, res) => {
     id: user._id,
     name: user.name,
     email: user.email,
+    phone: user.phone,
     plan: tier,
+    planExpiresAt: user.planExpiresAt,
     renVerified: user.renVerified,
     renNumber: user.renNumber,
     // Infinity isn't valid JSON - null means "unlimited" on the frontend.
     listingLimit: Number.isFinite(listingLimit) ? listingLimit : null,
     requirementLimit: Number.isFinite(requirementLimit) ? requirementLimit : null,
   });
+});
+
+// PATCH /api/auth/me - update your own profile (currently just phone,
+// needed so bcl.my payment links have a payer_telephone_number to use -
+// see routes/billing.js).
+router.patch("/me", async (req, res) => {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ error: "Not logged in." });
+  }
+  const { phone } = req.body;
+  if (!phone || !phone.trim()) {
+    return res.status(400).json({ error: "Phone number is required." });
+  }
+  await User.findByIdAndUpdate(req.session.userId, { phone: phone.trim() });
+  res.json({ success: true });
 });
 
 module.exports = router;

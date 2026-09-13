@@ -1851,12 +1851,86 @@ async function initPostRequirementPage() {
 
 function initUpgradePage(user) {
   const msg = document.getElementById("current-plan-message");
-  if (user.plan === "premium") {
-    msg.textContent = "You're on the Premium plan. Thanks for supporting Hartahub!";
-  } else if (user.plan === "pro") {
-    msg.textContent = "You're on the Pro plan. Upgrade to Premium for unlimited listings and the commission dashboard.";
-  } else {
-    msg.textContent = "You're currently on the Free plan.";
+  const upgradeMsg = document.getElementById("upgrade-message");
+  const phoneGate = document.getElementById("phone-gate");
+  const phoneInput = document.getElementById("upgrade-phone");
+
+  function renderPlanMessage() {
+    if (user.plan === "premium") {
+      msg.textContent = "You're on the Premium plan. Thanks for supporting Hartahub!";
+    } else if (user.plan === "pro") {
+      msg.textContent = "You're on the Pro plan. Upgrade to Premium for unlimited listings and the commission dashboard.";
+    } else {
+      msg.textContent = "You're currently on the Free plan.";
+    }
+  }
+  renderPlanMessage();
+
+  if (!user.phone) {
+    phoneGate.classList.remove("hidden");
+  }
+
+  document.querySelectorAll("[data-upgrade-plan]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      upgradeMsg.textContent = "";
+      upgradeMsg.className = "form-message";
+      const plan = btn.dataset.upgradePlan;
+      const payload = { plan };
+      if (!user.phone) {
+        const phone = phoneInput.value.trim();
+        if (!phone) {
+          upgradeMsg.textContent = "Please enter a phone number first.";
+          upgradeMsg.className = "form-message error";
+          return;
+        }
+        payload.phone = phone;
+      }
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Redirecting to payment...";
+      try {
+        const data = await api("/api/billing/checkout", { method: "POST", body: JSON.stringify(payload) });
+        window.location.href = data.url;
+      } catch (err) {
+        upgradeMsg.textContent = err.message;
+        upgradeMsg.className = "form-message error";
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    });
+  });
+
+  // bcl.my redirects here after payment with ?status=success|failed&order=...
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get("status");
+  const order = params.get("order");
+  if (status && order) {
+    if (status === "success") {
+      upgradeMsg.textContent = "Confirming your payment...";
+      upgradeMsg.className = "form-message";
+      api(`/api/billing/verify/${encodeURIComponent(order)}`)
+        .then((result) => {
+          if (result.applied) {
+            upgradeMsg.textContent = `Payment confirmed! You're now on the ${result.plan} plan.`;
+            upgradeMsg.className = "form-message success";
+            user.plan = result.plan;
+            renderPlanMessage();
+          } else {
+            upgradeMsg.textContent =
+              "We couldn't confirm your payment yet. If you were charged, please wait a minute and refresh this page.";
+            upgradeMsg.className = "form-message error";
+          }
+        })
+        .catch(() => {
+          upgradeMsg.textContent = "We couldn't confirm your payment. If you were charged, please refresh this page in a minute.";
+          upgradeMsg.className = "form-message error";
+        });
+    } else {
+      upgradeMsg.textContent = "Payment was not completed. You can try again below.";
+      upgradeMsg.className = "form-message error";
+    }
+    // Drop the query params so refreshing the page doesn't re-verify.
+    window.history.replaceState({}, "", window.location.pathname);
   }
 }
 
