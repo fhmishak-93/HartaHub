@@ -1168,7 +1168,7 @@ function renderNav(user) {
       <a href="post-listing.html">Post Listing</a>
       <a href="post-requirement.html">Post Buyer</a>
       <a href="upgrade.html">Upgrade</a>
-      <span class="nav-user">Hi, ${escapeHtml(user.name)}${tick}${planBadge}</span>
+      <a href="profile.html" class="nav-user">Hi, ${escapeHtml(user.name)}${tick}${planBadge}</a>
       <button id="logout-btn">Log Out</button>
     `;
     document.getElementById("logout-btn").addEventListener("click", async () => {
@@ -1934,6 +1934,81 @@ function initUpgradePage(user) {
   }
 }
 
+// ---------- page: profile ----------
+
+function initProfilePage(user) {
+  document.getElementById("profile-name").value = user.name || "";
+  document.getElementById("profile-email").value = user.email || "";
+  document.getElementById("profile-phone").value = user.phone || "";
+  document.getElementById("profile-ren").value = user.renNumber || "";
+
+  const renHint = document.getElementById("ren-hint");
+  function renderRenHint() {
+    renHint.textContent = user.renVerified
+      ? "Verified - shows a gold tick next to your name."
+      : "Not verified yet. Changing this number resets verification.";
+  }
+  renderRenHint();
+
+  document.getElementById("profile-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById("profile-message");
+    msg.textContent = "";
+    msg.className = "form-message";
+
+    const payload = {
+      name: document.getElementById("profile-name").value,
+      email: document.getElementById("profile-email").value,
+      phone: document.getElementById("profile-phone").value,
+      renNumber: document.getElementById("profile-ren").value,
+    };
+
+    try {
+      await api("/api/auth/me", { method: "PATCH", body: JSON.stringify(payload) });
+      msg.textContent = "Profile updated.";
+      msg.className = "form-message success";
+      if (payload.renNumber !== (user.renNumber || "")) {
+        user.renVerified = false;
+      }
+      user.name = payload.name;
+      user.email = payload.email;
+      user.phone = payload.phone;
+      user.renNumber = payload.renNumber;
+      renderRenHint();
+    } catch (err) {
+      msg.textContent = err.message;
+      msg.className = "form-message error";
+    }
+  });
+
+  document.getElementById("password-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById("password-message");
+    msg.textContent = "";
+    msg.className = "form-message";
+
+    const currentPassword = document.getElementById("current-password").value;
+    const newPassword = document.getElementById("new-password").value;
+    const confirmPassword = document.getElementById("confirm-password").value;
+
+    if (newPassword !== confirmPassword) {
+      msg.textContent = "New password and confirmation don't match.";
+      msg.className = "form-message error";
+      return;
+    }
+
+    try {
+      await api("/api/auth/password", { method: "PATCH", body: JSON.stringify({ currentPassword, newPassword }) });
+      msg.textContent = "Password changed.";
+      msg.className = "form-message success";
+      document.getElementById("password-form").reset();
+    } catch (err) {
+      msg.textContent = err.message;
+      msg.className = "form-message error";
+    }
+  });
+}
+
 // ---------- boot ----------
 
 async function boot() {
@@ -1970,6 +2045,7 @@ async function boot() {
   if (page === "post-listing") initPostListingPage(user);
   if (page === "post-requirement") initPostRequirementPage(user);
   if (page === "upgrade") initUpgradePage(user);
+  if (page === "profile") initProfilePage(user);
 }
 
 document.addEventListener("DOMContentLoaded", boot);

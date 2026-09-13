@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Profile - Hartahub</title>
+<meta name="description" content="Update your Hartahub account details." />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="profile">
+  <a href="#main" class="skip-link">Skip to content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo">Harta<span>hub</span></a>
+      <button id="nav-toggle" class="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
+      <nav id="nav-links" class="nav-links"></nav>
+    </div>
+  </header>
+  <div id="nav-scrim" class="nav-scrim"></div>
+
+  <main id="main" class="container page page-narrow">
+    <h1>My Profile</h1>
+    <p class="page-subtitle">Update the contact details on your account.</p>
+
+    <form id="profile-form" class="stacked-form">
+      <label for="profile-name">Full Name</label>
+      <input type="text" id="profile-name" required />
+
+      <label for="profile-email">Email</label>
+      <input type="email" id="profile-email" required autocomplete="email" />
+
+      <label for="profile-phone">Phone</label>
+      <input type="tel" id="profile-phone" placeholder="01X-XXXXXXX" />
+
+      <label for="profile-ren">REN Number</label>
+      <input type="text" id="profile-ren" placeholder="e.g. REN 12345" />
+      <p class="hint" id="ren-hint"></p>
+
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <p class="form-message" id="profile-message"></p>
+    </form>
+
+    <h2 style="margin-top: 40px;">Change Password</h2>
+    <form id="password-form" class="stacked-form">
+      <label for="current-password">Current Password</label>
+      <input type="password" id="current-password" required autocomplete="current-password" />
+
+      <label for="new-password">New Password</label>
+      <input type="password" id="new-password" required minlength="6" autocomplete="new-password" />
+
+      <label for="confirm-password">Confirm New Password</label>
+      <input type="password" id="confirm-password" required minlength="6" autocomplete="new-password" />
+
+      <button type="submit" class="btn btn-secondary">Change Password</button>
+      <p class="form-message" id="password-message"></p>
+    </form>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
