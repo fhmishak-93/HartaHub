@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const express = require("express");
 const User = require("../models/User");
 const requireAuth = require("../middleware/requireAuth");
@@ -9,17 +10,16 @@ const router = express.Router();
 const PLAN_PRICES = { pro: PRO_PRICE_RM, premium: PREMIUM_PRICE_RM };
 const PLAN_DAYS = 30;
 
-// Encodes the user + plan into bcl.my's order_number, since Hartahub has no
-// separate "pending order" table - the order number IS the record. Format
-// must be letters/digits/._-/ only and not start with "LINK-" (bcl.my rule).
-function buildOrderNumber(userId, plan) {
-  return `HH-${userId}-${plan}-${Date.now()}`;
-}
-
-function parseOrderNumber(orderNumber) {
-  const match = /^HH-([a-f0-9]{24})-(pro|premium)-(\d+)$/.exec(orderNumber || "");
-  if (!match) return null;
-  return { userId: match[1], plan: match[2] };
+// bcl.my's docs claim order_number can be up to 64 characters, but the real
+// (undocumented) limit enforced somewhere downstream at BayarCash/FPX is 26 -
+// anything longer creates the payment link fine but silently fails to reach
+// the bank-selection step when the payer clicks Pay. Confirmed by bisection
+// during testing: 26 chars works, 27 doesn't. That's far too short to encode
+// a Mongo _id + plan + timestamp, so the order number is just a short random
+// token and the pending plan is looked up on the User document instead of
+// being parsed back out of it.
+function buildOrderNumber() {
+  return `HH${crypto.randomBytes(10).toString("hex")}`; // 22 chars total
 }
 
 // Verifies a transaction with bcl.my directly (never trusts a webhook body
@@ -28,14 +28,16 @@ function parseOrderNumber(orderNumber) {
 // Shared by the webhook and the success-redirect fast path below, so
 // whichever fires first does the work and the other is a no-op.
 async function applyUpgradeIfPaid(orderNumber) {
-  const parsed = parseOrderNumber(orderNumber);
-  if (!parsed) return { applied: false, reason: "Unrecognised order number." };
-
-  const user = await User.findById(parsed.userId);
-  if (!user) return { applied: false, reason: "Account not found." };
+  const user = await User.findOne({ pendingBillingOrderNumber: orderNumber });
+  if (!user) {
+    // Not necessarily an error - could already be applied and cleared, or a
+    // retry of an order we never issued.
+    return { applied: false, reason: "No pending upgrade for this order." };
+  }
+  const plan = user.pendingBillingPlan;
 
   if (user.lastBillingOrderNumber === orderNumber) {
-    return { applied: true, alreadyApplied: true, plan: parsed.plan };
+    return { applied: true, alreadyApplied: true, plan };
   }
 
   const result = await getTransaction(orderNumber);
@@ -43,7 +45,7 @@ async function applyUpgradeIfPaid(orderNumber) {
   if (!txn || !txn.is_paid) {
     return { applied: false, reason: "Not paid yet." };
   }
-  if (Number(txn.amount) !== Number(PLAN_PRICES[parsed.plan])) {
+  if (Number(txn.amount) !== Number(PLAN_PRICES[plan])) {
     return { applied: false, reason: "Amount does not match the plan price." };
   }
 
@@ -51,12 +53,14 @@ async function applyUpgradeIfPaid(orderNumber) {
   const currentExpiry = user.planExpiresAt && new Date(user.planExpiresAt) > now ? new Date(user.planExpiresAt) : now;
   const newExpiry = new Date(currentExpiry.getTime() + PLAN_DAYS * 24 * 60 * 60 * 1000);
 
-  user.plan = parsed.plan;
+  user.plan = plan;
   user.planExpiresAt = newExpiry;
   user.lastBillingOrderNumber = orderNumber;
+  user.pendingBillingOrderNumber = undefined;
+  user.pendingBillingPlan = undefined;
   await user.save();
 
-  return { applied: true, plan: parsed.plan, planExpiresAt: newExpiry };
+  return { applied: true, plan, planExpiresAt: newExpiry };
 }
 
 // POST /api/billing/checkout - start an upgrade. Body: { plan: "pro"|"premium" }
@@ -79,10 +83,13 @@ router.post("/checkout", requireAuth, async (req, res) => {
       }
       payerPhone = phone.trim();
       user.phone = payerPhone;
-      await user.save();
     }
 
-    const orderNumber = buildOrderNumber(user._id, plan);
+    const orderNumber = buildOrderNumber();
+    user.pendingBillingOrderNumber = orderNumber;
+    user.pendingBillingPlan = plan;
+    await user.save();
+
     const result = await createPaymentLink({
       orderNumber,
       amount: PLAN_PRICES[plan],
@@ -109,9 +116,9 @@ router.post("/checkout", requireAuth, async (req, res) => {
 // waiting on webhook delivery.
 router.get("/verify/:orderNumber", requireAuth, async (req, res) => {
   try {
-    const parsed = parseOrderNumber(req.params.orderNumber);
-    if (!parsed || parsed.userId !== String(req.session.userId)) {
-      return res.status(400).json({ error: "Invalid order number." });
+    const user = await User.findOne({ pendingBillingOrderNumber: req.params.orderNumber });
+    if (user && String(user._id) !== String(req.session.userId)) {
+      return res.status(403).json({ error: "This order does not belong to your account." });
     }
     const result = await applyUpgradeIfPaid(req.params.orderNumber);
     res.json(result);

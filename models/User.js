@@ -22,6 +22,13 @@ const userSchema = new mongoose.Schema({
   // makes applying an upgrade idempotent (a webhook can retry, and the
   // success-redirect page can also trigger a verify for the same order).
   lastBillingOrderNumber: { type: String },
+  // Set when a checkout is started (see routes/billing.js) - bcl.my's real
+  // order_number limit turned out to be 26 characters (their docs claim 64),
+  // too short to encode a Mongo _id + plan + timestamp directly, so the
+  // order number is just a short random token and the pending plan is
+  // looked up here instead of being parsed back out of it.
+  pendingBillingOrderNumber: { type: String },
+  pendingBillingPlan: { type: String, enum: ["pro", "premium"] },
   // Registered Estate Negotiator number. Agents enter this at signup;
   // the site owner manually verifies it and flips renVerified to show
   // a gold tick next to their name (see README).
