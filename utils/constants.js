@@ -57,18 +57,23 @@ const BUDGET_RANGES = [
   { key: "1000001-10000000", min: 1000001, max: 10000000, label: "Above RM1,000,000" },
 ];
 
-// Plan caps and pricing. Change the *_PRICE_RM values any time - they're
-// only used for display, since billing is manual for now.
+// Plan caps and pricing. Change the *_PRICE_RM values any time - they feed
+// both the pricing pages and the actual amount charged via bcl.my (see
+// routes/billing.js), so a change here takes effect for real payments too.
 const FREE_LISTING_LIMIT = 2;
 const FREE_REQUIREMENT_LIMIT = 2;
-const PRO_LISTING_LIMIT = 10;
-const PRO_REQUIREMENT_LIMIT = 10;
+const PRO_LISTING_LIMIT = 100;
+const PRO_REQUIREMENT_LIMIT = 100;
 // Premium has no cap - code checks for Infinity rather than a number.
 const PREMIUM_LISTING_LIMIT = Infinity;
 const PREMIUM_REQUIREMENT_LIMIT = Infinity;
 
-const PRO_PRICE_RM = 19;
-const PREMIUM_PRICE_RM = 97;
+// Billed every 3 months in one payment (bcl.my has no recurring/Direct
+// Debit support yet - see routes/billing.js), not monthly. These are the
+// full amounts charged per payment, e.g. Pro = RM19/month x 3.
+const BILLING_PERIOD_DAYS = 90;
+const PRO_PRICE_RM = 57;
+const PREMIUM_PRICE_RM = 117;
 
 // Used for the commission dashboard: estimated commission = price * this.
 const COMMISSION_RATE = 0.03;
@@ -88,6 +93,7 @@ module.exports = {
   PRO_REQUIREMENT_LIMIT,
   PREMIUM_LISTING_LIMIT,
   PREMIUM_REQUIREMENT_LIMIT,
+  BILLING_PERIOD_DAYS,
   PRO_PRICE_RM,
   PREMIUM_PRICE_RM,
   COMMISSION_RATE,

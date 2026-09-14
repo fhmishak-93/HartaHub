@@ -3,12 +3,12 @@ const express = require("express");
 const User = require("../models/User");
 const requireAuth = require("../middleware/requireAuth");
 const { createPaymentLink, getTransaction } = require("../utils/bcl");
-const { PRO_PRICE_RM, PREMIUM_PRICE_RM } = require("../utils/constants");
+const { PRO_PRICE_RM, PREMIUM_PRICE_RM, BILLING_PERIOD_DAYS } = require("../utils/constants");
 
 const router = express.Router();
 
 const PLAN_PRICES = { pro: PRO_PRICE_RM, premium: PREMIUM_PRICE_RM };
-const PLAN_DAYS = 30;
+const PLAN_DAYS = BILLING_PERIOD_DAYS;
 
 // bcl.my's docs claim order_number can be up to 64 characters, but the real
 // (undocumented) limit enforced somewhere downstream at BayarCash/FPX is 26 -
@@ -96,7 +96,7 @@ router.post("/checkout", requireAuth, async (req, res) => {
       payerName: user.name,
       payerEmail: user.email,
       payerPhone,
-      remarks: `Hartahub ${plan} upgrade (30 days)`,
+      remarks: `Hartahub ${plan} upgrade (3 months)`,
     });
 
     const url = result && result.data && result.data.payment_link;

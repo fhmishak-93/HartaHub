@@ -96,19 +96,12 @@ From now on, every time you `git push` to GitHub, Render automatically redeploys
 Hartahub has a built-in 3-tier plan system:
 
 - **Free** - up to 2 listings and 2 buyer requirements. Agents can see that a match exists, but the counterpart agent's email/phone are hidden.
-- **Pro** (RM 19/month by default) - up to 10 listings and 10 buyer requirements, full contact details on every match, and photo upload instead of a link.
-- **Premium** (RM 97/month by default) - unlimited listings and requirements, full contact details, photo upload, and the commission/price-drop dashboard. WhatsApp match alerts and mobile app access are shown as "Coming Soon" - they're not built yet, so don't collect payment implying they're live today.
+- **Pro** (RM 57 every 3 months by default) - up to 100 listings and 100 buyer requirements, full contact details on every match, and photo upload instead of a link.
+- **Premium** (RM 117 every 3 months by default) - unlimited listings and requirements, full contact details, photo upload, and the commission/price-drop dashboard. A calculator for agents, WhatsApp match alerts, and mobile app access are shown as "Coming Soon" - they're not built yet, so don't collect payment implying they're live today.
 
-There's no payment gateway wired up yet - upgrades are granted manually, which is the simplest way to start and lets you validate that agents will actually pay before building any billing automation. When you're ready to automate, Malaysia-friendly options with recurring billing support include Curlec (Razorpay Malaysia, most SaaS-focused), Billplz, and Chip.
+Payment is handled by bcl.my (see `routes/billing.js` and `utils/bcl.js`) - a one-time payment link per billing period, since bcl.my's Direct Debit/recurring billing isn't available on this account yet. Each successful payment extends `planExpiresAt` by `BILLING_PERIOD_DAYS` (90 days / 3 months); an agent renews by paying again before it lapses.
 
-### Before you launch this
-
-Open `public/upgrade.html` and replace the two placeholders with your real details:
-
-- `[ADD YOUR PHONE NUMBER OR BANK ACCOUNT HERE]` - your DuitNow number or bank account for receiving payment
-- `[ADD YOUR WHATSAPP NUMBER HERE]` (and the `https://wa.me/60000000000` link next to it) - where agents send proof of payment
-
-To change the prices, edit `PRO_PRICE_RM` and `PREMIUM_PRICE_RM` in `utils/constants.js` (this also updates the numbers shown on the pricing pages). To change plan limits, edit `FREE_LISTING_LIMIT`, `FREE_REQUIREMENT_LIMIT`, `PRO_LISTING_LIMIT`, and `PRO_REQUIREMENT_LIMIT` in the same file (Premium is always unlimited). The commission rate used on the dashboard (`COMMISSION_RATE`, default 3%) also lives there.
+To change the prices, edit `PRO_PRICE_RM` and `PREMIUM_PRICE_RM` in `utils/constants.js` - these are the full amount charged per billing period, not a monthly rate (this also updates the numbers shown on the pricing pages). To change the billing period itself, edit `BILLING_PERIOD_DAYS` in the same file. To change plan limits, edit `FREE_LISTING_LIMIT`, `FREE_REQUIREMENT_LIMIT`, `PRO_LISTING_LIMIT`, and `PRO_REQUIREMENT_LIMIT` (Premium is always unlimited). The commission rate used on the dashboard (`COMMISSION_RATE`, default 3%) also lives there.
 
 ### Manually upgrading an agent to Pro or Premium
 

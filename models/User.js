@@ -11,11 +11,11 @@ const userSchema = new mongoose.Schema({
   },
   passwordHash: { type: String, required: true },
   phone: { type: String, trim: true },
-  // "pro" = 10 listings + 10 requirements, full contact details on matches.
+  // "pro" = 100 listings + 100 requirements, full contact details on matches.
   // "premium" = unlimited listings/requirements, photo upload, full contact,
   // priority match ranking (see utils/matching.js PREMIUM_PRIORITY_BONUS).
-  // Upgraded via bcl.my payment links (see routes/billing.js) - 30 days per
-  // payment, renewed by paying again before planExpiresAt lapses.
+  // Upgraded via bcl.my payment links (see routes/billing.js) - billed every
+  // 3 months per payment, renewed by paying again before planExpiresAt lapses.
   plan: { type: String, enum: ["free", "pro", "premium"], default: "free" },
   planExpiresAt: { type: Date }, // optional - set this if you sell fixed terms
   // The last bcl.my order_number that successfully upgraded this account -

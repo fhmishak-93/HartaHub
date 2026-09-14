@@ -1379,7 +1379,7 @@ function requirementCardHtml(requirement, options = {}) {
 async function initDashboardPage(user) {
   let welcome = `Welcome back, ${user.name}. You're on the Free plan. Upgrade to Pro or Premium for more room and full match contact details.`;
   if (user.plan === "pro") {
-    welcome = `Welcome back, ${user.name}. You're on the Pro plan - up to 10 listings, 10 buyer requirements, full contact details, and photo upload.`;
+    welcome = `Welcome back, ${user.name}. You're on the Pro plan - up to 100 listings, 100 buyer requirements, full contact details, and photo upload.`;
   } else if (user.plan === "premium") {
     welcome = `Welcome back, ${user.name}. You're on the Premium plan - unlimited listings and requirements, plus your commission dashboard below.`;
   }
