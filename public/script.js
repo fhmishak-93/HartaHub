@@ -1454,7 +1454,7 @@ async function initDashboardPage(user) {
                         counterpart.phone
                           ? `<a class="btn btn-whatsapp" href="${whatsappLink(
                               counterpart.phone,
-                              `Hi ${counterpart.name}, saw we have a match on Hartahub - "${m.listing.title}" for ${m.requirement.clientLabel}. Can we arrange a viewing?`
+                              `Hi ${counterpart.name}, saw we have a match on Hartahub - "${m.listing.title}" for ${m.requirement.clientLabel}. Can you share this listing for co-broke?`
                             )}" target="_blank" rel="noopener">${WHATSAPP_ICON_SVG} WhatsApp ${escapeHtml(counterpart.name.split(" ")[0])}</a>`
                           : ""
                       }
